@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Edit Employee</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg bg-primary" data-bs-theme="dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">App</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link {{ if eq .currentPath "/" }} active {{ end }}" aria-current="page" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ if hasPrefix .currentPath "/employees" }} active {{ end }}" href="/employees">Employees</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <div class="d-flex justify-content-between mb-3">
+            <h3 class="mb-0">Edit Employee</h3>
+        </div>
+
+        <form action="/employees/{{ .employee.Id }}/update" method="post">
+            <div class="mb-3">
+                <label for="name" class="form-label">Name</label>
+                <input type="text" class="form-control" id="name" name="name" placeholder="Full name" value="{{ .employee.Name }}" required>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="text" class="form-control" id="email" name="email" placeholder="Email address" value="{{ .employee.Email }}" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="tax_number" class="form-label">Tax Number</label>
+                        <input type="text" class="form-control" id="tax_number" name="tax_number" placeholder="Tax number" value="{{ .employee.TaxNumber }}" maxlength="20">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="gender" class="form-label">Gender</label>
+                        <div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="gender" id="male" value="Male" {{ if eq .employee.Gender "Male" }} checked {{ end }}>
+                                <label class="form-check-label" for="male">
+                                    Male
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="gender" id="female" value="Female" {{ if eq .employee.Gender "Female" }} checked {{ end }}>
+                                <label class="form-check-label" for="female">
+                                    Female
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="hired_date" class="form-label">Hired Date</label>
+                        <input type="date" class="form-control" id="hired_date" name="hired_date" placeholder="Hired date" maxlength="20" value="{{ .employee.HiredDate }}">
+                    </div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="address" class="form-label">Address</label>
+                <textarea class="form-control" id="address" name="address" rows="3" placeholder="Address" maxlength="300">{{ .employee.Address }}</textarea>
+            </div>
+            <div class="mb-3">
+                <label for="status" class="form-label">Status</label>
+                <select class="form-select" id="status" name="status" aria-label="Employee status">
+                    <option selected>Select status</option>
+                    <option value="PENDING" {{ if eq .employee.Status "PENDING" }} selected {{ end }}>PENDING</option>
+                    <option value="ACTIVE" {{ if eq .employee.Status "ACTIVE" }} selected {{ end }}>ACTIVE</option>
+                    <option value="INACTIVE" {{ if eq .employee.Status "INACTIVE" }} selected {{ end }}>INACTIVE</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="status" class="form-label">Allowance</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="Medical" name="allowances" id="allowance_medical" {{ if containsByField .employee_allowances "Allowance" "Medical" }} checked {{ end }}>
+                    <label class="form-check-label" for="allowance_medical">
+                        Medical
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="Transportation" name="allowances" id="allowance_transportation" {{ if containsByField .employee_allowances "Allowance" "Transportation" }} checked {{ end }}>
+                    <label class="form-check-label" for="allowance_transportation">
+                        Transportation
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="Housing" name="allowances" id="allowance_housing" {{ if containsByField .employee_allowances "Allowance" "Housing" }} checked {{ end }}>
+                    <label class="form-check-label" for="allowance_housing">
+                        Housing
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="Education" name="allowances" id="allowance_education" {{ if containsByField .employee_allowances "Allowance" "Education" }} checked {{ end }}>
+                    <label class="form-check-label" for="allowance_education">
+                        Education
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="Childcare" name="allowances" id="allowance_childcare" {{ if containsByField .employee_allowances "Allowance" "Childcare" }} checked {{ end }}>
+                    <label class="form-check-label" for="allowance_childcare">
+                        Childcare
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="Entertainment" name="allowances" id="allowance_entertainment" {{ if containsByField .employee_allowances "Allowance" "Entertainment" }} checked {{ end }}>
+                    <label class="form-check-label" for="allowance_entertainment">
+                        Entertainment
+                    </label>
+                </div>
+            </div>
+            <div class="mb-3 text-end">
+                <button type="submit" class="btn btn-primary">Update Employee</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+  </body>
+</html>

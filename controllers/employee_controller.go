@@ -1,0 +1,368 @@
+package controllers
+
+import (
+	"database/sql"
+	"fmt"
+	"net/http"
+	"strconv"
+
+	"github.com/anggadarkprince/crud-employee-go/utilities"
+)
+
+type Employee struct {
+	Id int
+	Name string
+	Email string
+	TaxNumber string
+	Gender string
+	HiredDate string
+	Address string
+	Status string
+	TotalAllowance int
+}
+
+type EmployeeAllowance struct {
+	Id int
+	EmployeeId int
+	Allowance string
+}
+
+func NewIndexEmployeeController(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		rows, err := db.Query(`
+			SELECT 
+				id, name, email, tax_number, gender, hired_date, address, status, 
+				(SELECT COUNT(*) FROM employee_allowances WHERE employee_id = employees.id) AS total_allowance 
+			FROM employees
+		`)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer rows.Close()
+
+		var employees []Employee
+		for rows.Next() {
+			var employee Employee
+
+			err = rows.Scan(
+				&employee.Id,
+				&employee.Name,
+				&employee.Email,
+				&employee.TaxNumber,
+				&employee.Gender,
+				&employee.HiredDate,
+				&employee.Address,
+				&employee.Status,
+				&employee.TotalAllowance,
+			)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			employees = append(employees, employee)
+		}
+
+		data := make(map[string]any)
+		data["employees"] = employees
+
+		utilities.Render(w, r, "employees/index.html", data)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+func NewCreateEmployeeController() func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		err := utilities.Render(w, r, "employees/create.html", nil)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+}
+
+func NewStoreEmployeeController(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		err := r.ParseForm()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		name := r.FormValue("name")
+		email := r.FormValue("email")
+		taxNumber := r.FormValue("tax_number")
+		gender := r.FormValue("gender")
+		hired_date := r.FormValue("hired_date")
+		address := r.FormValue("address")
+		status := r.FormValue("status")
+		allowances := r.Form["allowances"]
+
+		fmt.Println(name, email, taxNumber, gender, hired_date, address, status, allowances)
+
+		tx, err := db.Begin()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer tx.Rollback()
+
+		query := "INSERT INTO employees(name, email, tax_number, gender, hired_date, address, status) VALUES(?, ?, ?, ?, ?, ?, ?)"
+		result, err := tx.Exec(query, name, email, taxNumber, gender, hired_date, address, status)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		employeeId, _ := result.LastInsertId()
+
+		statement, _ := tx.Prepare("INSERT INTO employee_allowances(employee_id, allowance) VALUES(?, ?)")
+		defer statement.Close()
+
+		for _, item := range allowances {
+			_, err := statement.Exec(employeeId, item)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
+
+		if err := tx.Commit(); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		
+		http.Redirect(w, r, "/employees", http.StatusMovedPermanently)
+	}
+}
+
+func NewViewEmployeeController(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		employeeId := r.PathValue("id")
+		row := db.QueryRow("SELECT id, name, email, tax_number, gender, hired_date, address, status FROM employees WHERE id = ?", employeeId)
+		if row.Err() != nil {
+			http.Error(w, row.Err().Error(), http.StatusInternalServerError)
+			return
+		}
+		var employee Employee
+		err := row.Scan(
+			&employee.Id,
+			&employee.Name,
+			&employee.Email,
+			&employee.TaxNumber,
+			&employee.Gender,
+			&employee.HiredDate,
+			&employee.Address,
+			&employee.Status,
+		)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		id, err := strconv.Atoi(employeeId)		
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		employee.Id = id
+
+		rows, err := db.Query("SELECT id, employee_id, allowance FROM employee_allowances WHERE employee_id = ?", employeeId)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer rows.Close()
+
+		var employee_allowances []EmployeeAllowance
+		for rows.Next() {
+			var employee_allowance EmployeeAllowance
+
+			err = rows.Scan(
+				&employee_allowance.Id,
+				&employee_allowance.EmployeeId,
+				&employee_allowance.Allowance,
+			)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			employee_allowances = append(employee_allowances, employee_allowance)
+		}
+
+		data := make(map[string]any)
+		data["employee"] = employee
+		data["employee_allowances"] = employee_allowances
+		
+		err = utilities.Render(w, r, "employees/view.html", data)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+}
+
+func NewEditEmployeeController(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		employeeId := r.PathValue("id")
+		row := db.QueryRow("SELECT id, name, email, tax_number, gender, hired_date, address, status FROM employees WHERE id = ?", employeeId)
+		if row.Err() != nil {
+			http.Error(w, row.Err().Error(), http.StatusInternalServerError)
+			return
+		}
+		var employee Employee
+		err := row.Scan(
+			&employee.Id,
+			&employee.Name,
+			&employee.Email,
+			&employee.TaxNumber,
+			&employee.Gender,
+			&employee.HiredDate,
+			&employee.Address,
+			&employee.Status,
+		)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		id, err := strconv.Atoi(employeeId)		
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		employee.Id = id
+
+		rows, err := db.Query("SELECT id, employee_id, allowance FROM employee_allowances WHERE employee_id = ?", employeeId)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer rows.Close()
+
+		var employee_allowances []EmployeeAllowance
+		for rows.Next() {
+			var employee_allowance EmployeeAllowance
+
+			err = rows.Scan(
+				&employee_allowance.Id,
+				&employee_allowance.EmployeeId,
+				&employee_allowance.Allowance,
+			)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			employee_allowances = append(employee_allowances, employee_allowance)
+		}
+
+		data := make(map[string]any)
+		data["employee"] = employee
+		data["employee_allowances"] = employee_allowances
+		
+		err = utilities.Render(w, r, "employees/edit.html", data)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+}
+
+func NewUpdateEmployeeController(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		employeeId := r.PathValue("id")
+		err := r.ParseForm()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		name := r.FormValue("name")
+		email := r.FormValue("email")
+		taxNumber := r.FormValue("tax_number")
+		gender := r.FormValue("gender")
+		hired_date := r.FormValue("hired_date")
+		address := r.FormValue("address")
+		status := r.FormValue("status")
+		allowances := r.Form["allowances"]
+
+		fmt.Println(name, email, taxNumber, gender, hired_date, address, status, allowances)
+
+		tx, err := db.Begin()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer tx.Rollback()
+
+		query := "UPDATE employees SET name = ?, email = ?, tax_number = ?, gender = ?, hired_date = ?, address = ?, status = ? WHERE id = ?"
+		_, err = tx.Exec(query, name, email, taxNumber, gender, hired_date, address, status, employeeId)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		_, err = tx.Exec("DELETE FROM employee_allowances WHERE employee_id = ?", employeeId)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		statement, _ := tx.Prepare("INSERT INTO employee_allowances(employee_id, allowance) VALUES(?, ?)")
+		defer statement.Close()
+
+		for _, item := range allowances {
+			_, err := statement.Exec(employeeId, item)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
+
+		if err := tx.Commit(); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		
+		http.Redirect(w, r, "/employees", http.StatusMovedPermanently)
+	}
+}
+
+func NewDeleteEmployeeController(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		employeeId := r.PathValue("id")
+		err := r.ParseForm()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		tx, err := db.Begin()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer tx.Rollback()
+
+		_, err = tx.Exec("DELETE FROM employees WHERE id = ?", employeeId)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		_, err = tx.Exec("DELETE FROM employee_allowances WHERE employee_id = ?", employeeId)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if err := tx.Commit(); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		
+		http.Redirect(w, r, "/employees", http.StatusMovedPermanently)
+	}
+}
