@@ -2,13 +2,20 @@ package database
 
 import (
 	"database/sql"
+	"os"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
 func InitDatabase() *sql.DB {
-	db, err := sql.Open("mysql", "root:@tcp(localhost:3306)/sandbox")
+	host := os.Getenv("DB_HOST")
+	port := os.Getenv("DB_PORT")
+	database := os.Getenv("DB_DATABASE")
+	username := os.Getenv("DB_USERNAME")
+	password := os.Getenv("DB_PASSWORD")
+
+	db, err := sql.Open("mysql", username + ":" + password + "@tcp(" + host + ":" + port + ")/" + database + "?parseTime=true")
 	if err != nil {
 		panic(err)
 	}

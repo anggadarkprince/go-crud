@@ -43,7 +43,7 @@
                     <th>Hired Date</th>
                     <th>Status</th>
                     <th>Allowance</th>
-                    <th>Action</th>
+                    <th class="text-md-end">Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -51,22 +51,28 @@
                     <tr>
                         <td>{{ add $i 1 }}</td>
                         <td>{{ $employee.Name }}</td>
-                        <td>{{ $employee.Email }}</td>
-                        <td>{{ $employee.Gender }}</td>
-                        <td>{{ $employee.TaxNumber }}</td>
-                        <td>{{ $employee.HiredDate }}</td>
+                        <td>{{ default $employee.Email.String "-" }}</td>
+                        <td>{{ default $employee.Gender.String "-" }}</td>
+                        <td>{{ default $employee.TaxNumber.String "-" }}</td>
+                        <td>{{ formatDate $employee.HiredDate "02 January 2006" "-" }}</td>
                         <td>
-                            <span class="badge 
-                                {{ if eq $employee.Status "PENDING" }} text-bg-secondary
-                                {{ else if eq $employee.Status "ACTIVE" }} text-bg-success
-                                {{ else if eq $employee.Status "INACTIVE" }} text-bg-danger
-                                {{ else }} text-bg-dark
-                                {{ end }}">
-                                {{ $employee.Status }}
-                            </span>
+                            {{ if $employee.Status.Valid }}
+                                <span class="badge 
+                                    {{ if eq $employee.Status.String "PENDING" }} text-bg-secondary
+                                    {{ else if eq $employee.Status.String "ACTIVE" }} text-bg-success
+                                    {{ else if eq $employee.Status.String "INACTIVE" }} text-bg-danger
+                                    {{ else }} text-bg-dark
+                                    {{ end }}">
+                                    {{ $employee.Status.String }}
+                                </span>
+                            {{ else }}
+                                <span class="badge text-bg-dark">
+                                    UNKNOWN
+                                </span>
+                            {{ end }}
                         </td>
                         <td>{{ $employee.TotalAllowance }} items</td>
-                        <td>
+                        <td class="text-md-end">
                             <div class="dropdown">
                                 <a class="btn btn-primary btn-sm dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     Action

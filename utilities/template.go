@@ -20,7 +20,7 @@ func LoadTemplates() *template.Template {
         }
 
         if strings.HasSuffix(path, ".html") {
-            rel := strings.TrimPrefix(path, "views/")
+            rel := strings.TrimPrefix(filepath.ToSlash(path), "views/")
 			
             bytes, _ := os.ReadFile(path)
 
@@ -44,7 +44,7 @@ func InitTemplates() {
 }
 
 func Render(w http.ResponseWriter, r *http.Request, name string, data any) error {
-	funcs := template.FuncMap{
+    funcs := template.FuncMap{
         "query": func(key string) string {
             return r.URL.Query().Get(key)
         },

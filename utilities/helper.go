@@ -1,9 +1,10 @@
 package utilities
 
 import (
-	"slices"
+	"database/sql"
 	"fmt"
 	"reflect"
+	"slices"
 	"strings"
 	"text/template"
 )
@@ -48,5 +49,16 @@ var TemplateFuncs = template.FuncMap{
 
         return false
     },
-    // "formatDate": FormatDate,
+    "default": func(value, fallback string) string {
+        if value == "" {
+            return fallback
+        }
+        return value
+    },
+    "formatDate": func(v any, layout, fallback string) string {
+        if t, ok := v.(sql.NullTime); ok && t.Valid {
+            return t.Time.Format(layout)
+        }
+        return fallback
+    },
 }

@@ -12,12 +12,12 @@ import (
 type Employee struct {
 	Id int
 	Name string
-	Email string
-	TaxNumber string
-	Gender string
-	HiredDate string
-	Address string
-	Status string
+	Email sql.NullString
+	TaxNumber sql.NullString
+	Gender sql.NullString
+	HiredDate sql.NullTime
+	Address sql.NullString
+	Status sql.NullString
 	TotalAllowance int
 }
 
@@ -34,6 +34,7 @@ func NewIndexEmployeeController(db *sql.DB) func(w http.ResponseWriter, r *http.
 				id, name, email, tax_number, gender, hired_date, address, status, 
 				(SELECT COUNT(*) FROM employee_allowances WHERE employee_id = employees.id) AS total_allowance 
 			FROM employees
+			ORDER BY id DESC
 		`)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -95,12 +96,19 @@ func NewStoreEmployeeController(db *sql.DB) func(w http.ResponseWriter, r *http.
 		email := r.FormValue("email")
 		taxNumber := r.FormValue("tax_number")
 		gender := r.FormValue("gender")
-		hired_date := r.FormValue("hired_date")
+		hiredDate := r.FormValue("hired_date")
 		address := r.FormValue("address")
 		status := r.FormValue("status")
 		allowances := r.Form["allowances"]
 
-		fmt.Println(name, email, taxNumber, gender, hired_date, address, status, allowances)
+		var hiredDateValue *string
+		if hiredDate != "" {
+			hiredDateValue = &hiredDate
+		} else {
+			hiredDateValue = nil
+		}
+
+		fmt.Println(name, email, taxNumber, gender, hiredDateValue, address, status, allowances)
 
 		tx, err := db.Begin()
 		if err != nil {
@@ -110,7 +118,7 @@ func NewStoreEmployeeController(db *sql.DB) func(w http.ResponseWriter, r *http.
 		defer tx.Rollback()
 
 		query := "INSERT INTO employees(name, email, tax_number, gender, hired_date, address, status) VALUES(?, ?, ?, ?, ?, ?, ?)"
-		result, err := tx.Exec(query, name, email, taxNumber, gender, hired_date, address, status)
+		result, err := tx.Exec(query, name, email, taxNumber, gender, hiredDateValue, address, status)
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -177,26 +185,26 @@ func NewViewEmployeeController(db *sql.DB) func(w http.ResponseWriter, r *http.R
 		}
 		defer rows.Close()
 
-		var employee_allowances []EmployeeAllowance
+		var employeeAllowances []EmployeeAllowance
 		for rows.Next() {
-			var employee_allowance EmployeeAllowance
+			var employeeAllowance EmployeeAllowance
 
 			err = rows.Scan(
-				&employee_allowance.Id,
-				&employee_allowance.EmployeeId,
-				&employee_allowance.Allowance,
+				&employeeAllowance.Id,
+				&employeeAllowance.EmployeeId,
+				&employeeAllowance.Allowance,
 			)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
 
-			employee_allowances = append(employee_allowances, employee_allowance)
+			employeeAllowances = append(employeeAllowances, employeeAllowance)
 		}
 
 		data := make(map[string]any)
 		data["employee"] = employee
-		data["employee_allowances"] = employee_allowances
+		data["employeeAllowances"] = employeeAllowances
 		
 		err = utilities.Render(w, r, "employees/view.html", data)
 		if err != nil {
@@ -243,26 +251,26 @@ func NewEditEmployeeController(db *sql.DB) func(w http.ResponseWriter, r *http.R
 		}
 		defer rows.Close()
 
-		var employee_allowances []EmployeeAllowance
+		var employeeAllowances []EmployeeAllowance
 		for rows.Next() {
-			var employee_allowance EmployeeAllowance
+			var employeeAllowance EmployeeAllowance
 
 			err = rows.Scan(
-				&employee_allowance.Id,
-				&employee_allowance.EmployeeId,
-				&employee_allowance.Allowance,
+				&employeeAllowance.Id,
+				&employeeAllowance.EmployeeId,
+				&employeeAllowance.Allowance,
 			)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
 
-			employee_allowances = append(employee_allowances, employee_allowance)
+			employeeAllowances = append(employeeAllowances, employeeAllowance)
 		}
 
 		data := make(map[string]any)
 		data["employee"] = employee
-		data["employee_allowances"] = employee_allowances
+		data["employeeAllowances"] = employeeAllowances
 		
 		err = utilities.Render(w, r, "employees/edit.html", data)
 		if err != nil {
@@ -279,16 +287,24 @@ func NewUpdateEmployeeController(db *sql.DB) func(w http.ResponseWriter, r *http
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+
 		name := r.FormValue("name")
 		email := r.FormValue("email")
 		taxNumber := r.FormValue("tax_number")
 		gender := r.FormValue("gender")
-		hired_date := r.FormValue("hired_date")
+		hiredDate := r.FormValue("hired_date")
 		address := r.FormValue("address")
 		status := r.FormValue("status")
 		allowances := r.Form["allowances"]
 
-		fmt.Println(name, email, taxNumber, gender, hired_date, address, status, allowances)
+		var hiredDateValue *string
+		if hiredDate != "" {
+			hiredDateValue = &hiredDate
+		} else {
+			hiredDateValue = nil
+		}
+
+		fmt.Println(name, email, taxNumber, gender, hiredDateValue, address, status, allowances)
 
 		tx, err := db.Begin()
 		if err != nil {
@@ -298,7 +314,7 @@ func NewUpdateEmployeeController(db *sql.DB) func(w http.ResponseWriter, r *http
 		defer tx.Rollback()
 
 		query := "UPDATE employees SET name = ?, email = ?, tax_number = ?, gender = ?, hired_date = ?, address = ?, status = ? WHERE id = ?"
-		_, err = tx.Exec(query, name, email, taxNumber, gender, hired_date, address, status, employeeId)
+		_, err = tx.Exec(query, name, email, taxNumber, gender, hiredDateValue, address, status, employeeId)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
