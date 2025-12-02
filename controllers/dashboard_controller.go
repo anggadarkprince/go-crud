@@ -1,23 +1,29 @@
 package controllers
 
 import (
-	"database/sql"
 	"net/http"
 
+	"github.com/anggadarkprince/crud-employee-go/services"
 	"github.com/anggadarkprince/crud-employee-go/utilities"
 )
 
 type DashboardController struct {
-	db *sql.DB
+	dashboardService *services.DashboardService
 }
 
-func NewDashboardController(db *sql.DB) *DashboardController {
-	return &DashboardController{db: db}
+func NewDashboardController(dashboardService *services.DashboardService) *DashboardController {
+	return &DashboardController{dashboardService: dashboardService}
 }
 
-func (c *DashboardController) Index(w http.ResponseWriter, r *http.Request) {
-	err := utilities.Render(w, r, "dashboard/index.html", nil)
+func (controller *DashboardController) Index(w http.ResponseWriter, r *http.Request) error {
+	stats, err := controller.dashboardService.GetStatistics(r.Context())
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+        return err
+    }
+
+	data := utilities.Compact(
+		"statistic", stats,
+	)
+
+	return utilities.Render(w, r, "dashboard/index.html", data)
 }

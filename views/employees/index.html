@@ -4,8 +4,13 @@
 
 {{ define "content" }}
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="mb-0">Employees</h3>
-    <a href="/employees/create" class="btn btn-success">Create Employee</a>
+    <div>
+        <h4 class="mb-0 fw-semibold">Employees</h4>
+        <p class="mb-0">List of employees</p>
+    </div>
+    <a href="/employees/create" class="btn btn-success">
+        Create Employee <i class="mdi mdi-plus-circle-outline ms-1"></i>
+    </a>
 </div>
 
 <table class="table table-sm">
@@ -54,10 +59,22 @@
                             Action
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="/employees/{{ $employee.Id }}">View</a></li>
-                            <li><a class="dropdown-item" href="/employees/{{ $employee.Id }}/edit">Edit</a></li>
+                            <li>
+                                <a class="dropdown-item" href="/employees/{{ $employee.Id }}">
+                                    <i class="mdi mdi-eye-outline me-2"></i> View
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/employees/{{ $employee.Id }}/edit">
+                                    <i class="mdi mdi-square-edit-outline me-2"></i> Edit
+                                </a>
+                            </li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="/employees/{{ $employee.Id }}/delete">Delete</a></li>
+                            <li>
+                                <a class="dropdown-item" href="/employees/{{ $employee.Id }}/delete">
+                                    <i class="mdi mdi-trash-can-outline me-2"></i> Delete
+                                </a>
+                            </li>
                         </ul>
                     </div>
                 </td>

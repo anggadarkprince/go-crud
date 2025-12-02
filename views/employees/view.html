@@ -4,8 +4,10 @@
 
 {{ define "content" }}
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="mb-0">View Employee</h3>
-    <a href="/employees/{{ .employee.Id }}/edit" class="btn btn-warning">Edit Employee</a>
+    <h4 class="mb-0 fw-semibold">View Employee</h4>
+    <a href="/employees/{{ .employee.Id }}/edit" class="btn btn-warning">
+        Edit Employee <i class="mdi mdi-square-edit-outline ms-1"></i>
+    </a>
 </div>
 
 <ul>

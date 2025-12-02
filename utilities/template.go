@@ -25,29 +25,33 @@ var TemplateFuncs = template.FuncMap{
     "containsByField": func(list any, fieldName string, value any) bool {
         v := reflect.ValueOf(list)
 
+        // If it's a pointer, dereference it
+        if v.Kind() == reflect.Ptr {
+            v = v.Elem()
+        }
+
         // Check list is a slice
         if v.Kind() != reflect.Slice {
             return false
         }
 
-        for i := 0; i < v.Len(); i++ {
+        for i := range v.Len() {
             elem := v.Index(i)
-
-            // Check elem adalah struct
+    
+            // If element is a pointer, dereference
             if elem.Kind() == reflect.Ptr {
                 elem = elem.Elem()
             }
+    
             if elem.Kind() != reflect.Struct {
                 continue
             }
-
-            // Get field by name
+    
             field := elem.FieldByName(fieldName)
             if !field.IsValid() {
                 continue
             }
-
-            // Check field with value then convert to string
+    
             if fmt.Sprint(field.Interface()) == fmt.Sprint(value) {
                 return true
             }
@@ -150,4 +154,20 @@ func EscapeHTML(s string) string {
 
 func UnescapeHTML(s string) string {
     return html.UnescapeString(s)
+}
+
+func Compact(pairs ...any) map[string]any {
+    m := make(map[string]any)
+
+    for i := 0; i < len(pairs); i += 2 {
+        key := pairs[i].(string)
+        var val any
+        if i+1 < len(pairs) {
+            val = pairs[i+1]
+        } else {
+            val = nil
+        }
+        m[key] = val
+    }
+    return m
 }
