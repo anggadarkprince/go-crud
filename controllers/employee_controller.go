@@ -29,18 +29,15 @@ type EmployeeAllowance struct {
 }
 
 type EmployeeController struct {
-	db *sql.DB
 	employeeService *services.EmployeeService
 	employeeAllowanceService *services.EmployeeAllowanceService
 }
 
 func NewEmployeeController(
-	db *sql.DB,
 	employeeService *services.EmployeeService,
 	employeeAllowanceService *services.EmployeeAllowanceService,
 ) *EmployeeController {
 	return &EmployeeController{
-		db: db,
 		employeeService: employeeService,
 		employeeAllowanceService: employeeAllowanceService,
 	}

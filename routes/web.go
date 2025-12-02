@@ -18,6 +18,13 @@ func (h HandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func MapRoutes(server *http.ServeMux, db *sql.DB) {
+	userRepository := repositories.NewUserRepository(db)
+	authService := services.NewAuthService(userRepository)
+	authController := controllers.NewAuthController(authService)
+	server.Handle("/login", HandlerFunc(authController.Index))
+	server.Handle("/authenticate", HandlerFunc(authController.Login))
+	server.Handle("/logout", HandlerFunc(authController.Logout))
+
 	dashboardRepository := repositories.NewDashboardRepository(db)
 	dashboardService := services.NewDashboardService(dashboardRepository)
 	dashboardController := controllers.NewDashboardController(dashboardService)
@@ -33,7 +40,7 @@ func MapRoutes(server *http.ServeMux, db *sql.DB) {
 	employeeAllowanceService := services.NewEmployeeAllowanceService(
 		employeeAllowanceRepository,
 	)
-	employeeController := controllers.NewEmployeeController(db, employeeService, employeeAllowanceService)
+	employeeController := controllers.NewEmployeeController(employeeService, employeeAllowanceService)
 	server.Handle("/employees", HandlerFunc(employeeController.Index))
 	server.Handle("/employees/create", HandlerFunc(employeeController.Create))
 	server.Handle("/employees/store", HandlerFunc(employeeController.Store))
