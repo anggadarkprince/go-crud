@@ -8,12 +8,15 @@ import (
 )
 
 func MapRoutes(server *http.ServeMux, db *sql.DB) {
-	server.HandleFunc("/", controllers.NewDashboardController())
-	server.HandleFunc("/employees", controllers.NewIndexEmployeeController(db))
-	server.HandleFunc("/employees/create", controllers.NewCreateEmployeeController())
-	server.HandleFunc("/employees/store", controllers.NewStoreEmployeeController(db))
-	server.HandleFunc("/employees/{id}", controllers.NewViewEmployeeController(db))
-	server.HandleFunc("/employees/{id}/edit", controllers.NewEditEmployeeController(db))
-	server.HandleFunc("/employees/{id}/update", controllers.NewUpdateEmployeeController(db))
-	server.HandleFunc("/employees/{id}/delete", controllers.NewDeleteEmployeeController(db))
+	dashboardController := controllers.NewDashboardController(db)
+	server.HandleFunc("/", dashboardController.Index)
+
+	employeeController := controllers.NewEmployeeController(db)
+	server.HandleFunc("/employees", employeeController.Index)
+	server.HandleFunc("/employees/create", employeeController.Create)
+	server.HandleFunc("/employees/store", employeeController.Store)
+	server.HandleFunc("/employees/{id}", employeeController.View)
+	server.HandleFunc("/employees/{id}/edit", employeeController.Edit)
+	server.HandleFunc("/employees/{id}/update", employeeController.Update)
+	server.HandleFunc("/employees/{id}/delete", employeeController.Delete)
 }

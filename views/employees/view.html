@@ -13,22 +13,22 @@
         <strong>Name:</strong> {{ .employee.Name }}
     </li>
     <li>
-        <strong>Email:</strong> {{ .employee.Email }}
+        <strong>Email:</strong> {{ default .employee.Email.String "-" }}
     </li>
     <li>
-        <strong>Tax Number:</strong> {{ .employee.TaxNumber }}
+        <strong>Tax Number:</strong> {{ default .employee.TaxNumber.String "-" }}
     </li>
     <li>
-        <strong>Gender:</strong> {{ .employee.Gender }}
+        <strong>Gender:</strong> {{ default .employee.Gender.String "-" }}
     </li>
     <li>
-        <strong>Status:</strong> {{ .employee.Status }}
+        <strong>Status:</strong> {{ default .employee.Status.String "-" }}
     </li>
     <li>
-        <strong>Hired Date:</strong> {{ .employee.HiredDate }}
+        <strong>Hired Date:</strong> {{ formatDate .employee.HiredDate "02 January 2006" "-" }}
     </li>
     <li>
-        <strong>Address:</strong> {{ .employee.Address }}
+        <strong>Address:</strong> {{ default .employee.Address.String "-" }}
     </li>
     <li>
         <strong>Allowances:</strong>
