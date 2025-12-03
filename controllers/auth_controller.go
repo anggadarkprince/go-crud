@@ -8,6 +8,7 @@ import (
 	"github.com/anggadarkprince/crud-employee-go/exceptions"
 	"github.com/anggadarkprince/crud-employee-go/services"
 	"github.com/anggadarkprince/crud-employee-go/utilities"
+	"github.com/anggadarkprince/crud-employee-go/utilities/session"
 )
 
 type AuthController struct {
@@ -93,6 +94,8 @@ func (controller *AuthController) Logout(w http.ResponseWriter, r *http.Request)
         SameSite: http.SameSiteLaxMode,
     }
     http.SetCookie(w, &cookie)
+
+	session.Flash(w, "warning", "You are logged out")
 
     http.Redirect(w, r, "/login", http.StatusSeeOther)
 	return nil

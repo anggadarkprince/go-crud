@@ -8,15 +8,31 @@
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link {{ if eq .currentPath "/" }} active {{ end }}" aria-current="page" href="/">Home</a>
+                        <a class="nav-link {{ if or (eq .currentPath "/") (eq .currentPath "/dashboard") }} active {{ end }}" aria-current="page" href="/">Home</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ if hasPrefix .currentPath "/employees" }} active {{ end }}" href="/employees">Employees</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ if hasPrefix .currentPath "/logout" }} active {{ end }}" href="/logout">Logout</a>
-                    </li>
                 </ul>
+                <div class="text-white">
+                    <div class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            {{ .auth.user.Name }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="/account">
+                                    <i class="mdi mdi-account-outline me-2"></i> Account
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/logout">
+                                    <i class="mdi mdi-eye-outline me-2"></i> Logout
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </div>
             </div>
         </div>
     </nav>

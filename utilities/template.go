@@ -13,6 +13,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/anggadarkprince/crud-employee-go/middlewares"
 	"github.com/anggadarkprince/crud-employee-go/utilities/session"
 )
 
@@ -258,6 +259,10 @@ func Render(w http.ResponseWriter, r *http.Request, name string, data map[string
     if oldData == nil {
         oldData = make(map[string]any)
     }
+    
+    // Authenticated user
+    authData := make(map[string]any)
+    authData["user"] = middlewares.GetUser(r)
 
 	payload := map[string]any{
         "currentPath": r.URL.Path,
@@ -265,6 +270,7 @@ func Render(w http.ResponseWriter, r *http.Request, name string, data map[string
         "queryAll": queryAll,
         "flash": flashData,
         "old": oldData,
+        "auth": authData,
     }
     maps.Copy(payload, data)
 

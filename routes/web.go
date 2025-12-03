@@ -5,10 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/anggadarkprince/crud-employee-go/controllers"
 	"github.com/anggadarkprince/crud-employee-go/exceptions"
+	"github.com/anggadarkprince/crud-employee-go/middlewares"
 	"github.com/anggadarkprince/crud-employee-go/repositories"
 	"github.com/anggadarkprince/crud-employee-go/services"
 	"github.com/anggadarkprince/crud-employee-go/utilities/session"
@@ -41,14 +43,20 @@ func MapRoutes(server *http.ServeMux, db *sql.DB) {
 	userRepository := repositories.NewUserRepository(db)
 	authService := services.NewAuthService(userRepository)
 	authController := controllers.NewAuthController(authService)
-	server.Handle("/login", HandlerFunc(authController.Index))
-	server.Handle("/authenticate", HandlerFunc(authController.Login))
-	server.Handle("/logout", HandlerFunc(authController.Logout))
+
+	auth := &middlewares.Auth{
+		UserRepository: userRepository,
+		SecretKey: os.Getenv("JWT_SECRET"),
+	}
+
+	server.Handle("/login", auth.GuestMiddleware(HandlerFunc(authController.Index)))
+	server.Handle("/authenticate", auth.GuestMiddleware(HandlerFunc(authController.Login)))
+	server.Handle("/logout", auth.AuthMiddleware(HandlerFunc(authController.Logout)))
 
 	dashboardRepository := repositories.NewDashboardRepository(db)
 	dashboardService := services.NewDashboardService(dashboardRepository)
 	dashboardController := controllers.NewDashboardController(dashboardService)
-	server.Handle("/", HandlerFunc(dashboardController.Index))
+	server.Handle("/", auth.AuthMiddleware(HandlerFunc(dashboardController.Index)))
 
 	employeeRepository := repositories.NewEmployeeRepository(db)
 	employeeAllowanceRepository := repositories.NewEmployeeAllowanceRepository(db)
@@ -61,11 +69,11 @@ func MapRoutes(server *http.ServeMux, db *sql.DB) {
 		employeeAllowanceRepository,
 	)
 	employeeController := controllers.NewEmployeeController(employeeService, employeeAllowanceService)
-	server.Handle("/employees", HandlerFunc(employeeController.Index))
-	server.Handle("/employees/create", HandlerFunc(employeeController.Create))
-	server.Handle("/employees/store", HandlerFunc(employeeController.Store))
-	server.Handle("/employees/{id}", HandlerFunc(employeeController.View))
-	server.Handle("/employees/{id}/edit", HandlerFunc(employeeController.Edit))
-	server.Handle("/employees/{id}/update", HandlerFunc(employeeController.Update))
-	server.Handle("/employees/{id}/delete", HandlerFunc(employeeController.Delete))
+	server.Handle("/employees", auth.AuthMiddleware(HandlerFunc(employeeController.Index)))
+	server.Handle("/employees/create", auth.AuthMiddleware(HandlerFunc(employeeController.Create)))
+	server.Handle("/employees/store", auth.AuthMiddleware(HandlerFunc(employeeController.Store)))
+	server.Handle("/employees/{id}", auth.AuthMiddleware(HandlerFunc(employeeController.View)))
+	server.Handle("/employees/{id}/edit", auth.AuthMiddleware(HandlerFunc(employeeController.Edit)))
+	server.Handle("/employees/{id}/update", auth.AuthMiddleware(HandlerFunc(employeeController.Update)))
+	server.Handle("/employees/{id}/delete", auth.AuthMiddleware(HandlerFunc(employeeController.Delete)))
 }
