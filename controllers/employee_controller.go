@@ -2,12 +2,14 @@ package controllers
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/anggadarkprince/crud-employee-go/dto"
 	"github.com/anggadarkprince/crud-employee-go/services"
 	"github.com/anggadarkprince/crud-employee-go/utilities"
+	"github.com/anggadarkprince/crud-employee-go/utilities/session"
 )
 
 type Employee struct {
@@ -76,11 +78,13 @@ func (c *EmployeeController) Store(w http.ResponseWriter, r *http.Request) error
 		Status: r.FormValue("status"),
 		Allowances: allowances,
 	}	
-	_, err := c.employeeService.Store(r.Context(), data)
+	employee, err := c.employeeService.Store(r.Context(), data)
 	if err != nil {
         return err
     }
 	
+	session.Flash(w, "success", fmt.Sprintf("Employee %s successfully created", employee.Name))
+
 	http.Redirect(w, r, "/employees", http.StatusSeeOther)
 	return nil
 }
@@ -152,10 +156,12 @@ func (c *EmployeeController) Update(w http.ResponseWriter, r *http.Request) erro
 		Status: r.FormValue("status"),
 		Allowances: allowances,
 	}	
-	_, err = c.employeeService.Update(r.Context(), data)
+	employee, err := c.employeeService.Update(r.Context(), data)
 	if err != nil {
         return err
     }
+	
+	session.Flash(w, "success", fmt.Sprintf("Employee %s successfully updated", employee.Name))
 	
 	http.Redirect(w, r, "/employees", http.StatusSeeOther)
 	return nil
@@ -167,10 +173,15 @@ func (c *EmployeeController) Delete(w http.ResponseWriter, r *http.Request) erro
 	if err != nil {
         return err
     }
+	employee, err := c.employeeService.GetById(r.Context(), int(employeeId))
+	if err != nil {
+        return err
+    }
 	err = c.employeeService.Destroy(r.Context(), int(employeeId))
 	if err != nil {
         return err
     }
+	session.Flash(w, "warning", fmt.Sprintf("Employee %s successfully deleted", employee.Name))
 	http.Redirect(w, r, "/employees", http.StatusSeeOther)
 	return nil
 }

@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"os"
 
-	appErrors "github.com/anggadarkprince/crud-employee-go/errors"
+	"github.com/anggadarkprince/crud-employee-go/exceptions"
 	"github.com/anggadarkprince/crud-employee-go/services"
 	"github.com/anggadarkprince/crud-employee-go/utilities"
 )
@@ -29,18 +29,23 @@ func (controller *AuthController) Login(w http.ResponseWriter, r *http.Request) 
 	user, err := controller.authService.Authenticate(r.Context(), username, password)
 	if err != nil {
 		switch {
-        case errors.Is(err, appErrors.ErrUserNotFound):
-            http.Error(w, "User not found", http.StatusNotFound)
-			return nil
-        case errors.Is(err, appErrors.ErrWrongPassword):
-            http.Error(w, "Username or password wrong", http.StatusUnauthorized)
-			return nil
-        case errors.Is(err, appErrors.ErrUserInactive):
-            http.Error(w, "User is PENDING or SUSPENDED", http.StatusUnauthorized)
-			return nil
+        case errors.Is(err, exceptions.ErrUserNotFound):
+			return &exceptions.AppError{
+				Code: 404,
+				Message: "User not found",
+			}
+        case errors.Is(err, exceptions.ErrWrongPassword):
+			return &exceptions.AppError{
+				Code: 401,
+				Message: "Username or password wrong",
+			}
+        case errors.Is(err, exceptions.ErrUserInactive):
+			return &exceptions.AppError{
+				Code: 403,
+				Message: "User is PENDING or SUSPENDED",
+			}
         default:
-            http.Error(w, "Can't logged you in", http.StatusInternalServerError)
-			return nil
+			return err
         }
 	}
 	

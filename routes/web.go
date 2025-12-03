@@ -2,17 +2,37 @@ package routes
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/anggadarkprince/crud-employee-go/controllers"
+	"github.com/anggadarkprince/crud-employee-go/exceptions"
 	"github.com/anggadarkprince/crud-employee-go/repositories"
 	"github.com/anggadarkprince/crud-employee-go/services"
+	"github.com/anggadarkprince/crud-employee-go/utilities/session"
 )
 
 type HandlerFunc func(w http.ResponseWriter, r *http.Request) error
 func (h HandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     err := h(w, r)
     if err != nil {
+		referer := r.Header.Get("referer")
+		accept := r.Header.Get("accept")
+		method := r.Method
+		fmt.Println("Error", err.Error())
+		if (method != "GET" && strings.Contains(accept, "text/html") && referer != "") {
+			oldInput := session.ParseFormInput(r)
+			message := err.Error()
+			var appErr *exceptions.AppError
+			if errors.As(err, &appErr) {
+				message = appErr.Message
+			}
+			session.FlashWithInput(w, "danger", message, oldInput)
+			http.Redirect(w, r, referer, http.StatusSeeOther)
+			return
+		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
     }
 }

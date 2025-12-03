@@ -1,0 +1,8 @@
+{{ define "alert" }}
+    {{ if .flash.alert.message }}
+        <div class="alert alert-{{ default .flash.alert.type "light" }} alert-dismissible fade show" role="alert">
+            {{ .flash.alert.message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {{ end }}
+{{ end }}

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"html"
+	"maps"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -11,6 +12,8 @@ import (
 	"slices"
 	"strings"
 	"text/template"
+
+	"github.com/anggadarkprince/crud-employee-go/utilities/session"
 )
 
 var Template *template.Template
@@ -19,8 +22,38 @@ var TemplateFuncs = template.FuncMap{
     "add": func(a, b int) int { return a + b },
     "toUpper": strings.ToUpper,
     "hasPrefix": strings.HasPrefix,
-    "contains": func(arr []string, value string) bool {
-        return slices.Contains(arr, value)
+    "contains": func(arr any, value string) bool {
+        if arr == nil {
+            return false
+        }
+        
+        // Handle []string
+        if strArr, ok := arr.([]string); ok {
+            return slices.Contains(strArr, value)
+        }
+        
+        // Handle []any
+        if ifaceArr, ok := arr.([]any); ok {
+            for _, item := range ifaceArr {
+                if str, ok := item.(string); ok && str == value {
+                    return true
+                }
+            }
+            return false
+        }
+        
+        // Handle using reflection for other slice types
+        v := reflect.ValueOf(arr)
+        if v.Kind() == reflect.Slice {
+            for i := range v.Len() {
+                item := v.Index(i).Interface()
+                if str, ok := item.(string); ok && str == value {
+                    return true
+                }
+            }
+        }
+        
+        return false
     },
     "containsByField": func(list any, fieldName string, value any) bool {
         v := reflect.ValueOf(list)
@@ -59,11 +92,85 @@ var TemplateFuncs = template.FuncMap{
 
         return false
     },
-    "default": func(value, fallback string) string {
-        if value == "" {
+    "pluck": func(arr any, fieldName string) []string {
+        if arr == nil {
+            return []string{}
+        }
+        
+        result := []string{}
+        v := reflect.ValueOf(arr)
+        
+        // Dereference pointer if the input is a pointer
+        if v.Kind() == reflect.Ptr {
+            if v.IsNil() {
+                return result
+            }
+            v = v.Elem()
+        }
+        
+        // Handle if not a slice
+        if v.Kind() != reflect.Slice && v.Kind() != reflect.Array {
+            return result
+        }
+        
+        for i := 0; i < v.Len(); i++ {
+            item := v.Index(i)
+            
+            // Dereference pointer if needed
+            if item.Kind() == reflect.Ptr {
+                if item.IsNil() {
+                    continue
+                }
+                item = item.Elem()
+            }
+            
+            var fieldValue string
+            
+            // Handle struct
+            if item.Kind() == reflect.Struct {
+                field := item.FieldByName(fieldName)
+                if field.IsValid() {
+                    fieldValue = fmt.Sprintf("%v", field.Interface())
+                }
+            }
+            
+            // Handle map
+            if item.Kind() == reflect.Map {
+                field := item.MapIndex(reflect.ValueOf(fieldName))
+                if field.IsValid() {
+                    fieldValue = fmt.Sprintf("%v", field.Interface())
+                }
+            }
+            
+            if fieldValue != "" {
+                result = append(result, fieldValue)
+            }
+        }
+        
+        return result
+    },
+    "default": func(value any, fallback any) any {
+        if value == nil {
+            return fallback
+        }
+        
+        // Check if it's a slice/array and if it's empty
+        v := reflect.ValueOf(value)
+        if v.Kind() == reflect.Slice || v.Kind() == reflect.Array {
+            if v.Len() == 0 {
+                return fallback
+            }
+            return value
+        }
+        
+        str := fmt.Sprintf("%v", value)
+        if str == "" || str == "<no value>" || str == "[]" {
             return fallback
         }
         return value
+    },
+    "emptySlice": func() []string {
+        return []string{}
     },
     "formatDate": func(v any, layout, fallback string) string {
         if t, ok := v.(sql.NullTime); ok && t.Valid {
@@ -105,7 +212,7 @@ func InitTemplates() {
 	}
 }
 
-func Render(w http.ResponseWriter, r *http.Request, name string, data any) error {
+func Render(w http.ResponseWriter, r *http.Request, name string, data map[string]any) error {
     funcs := template.FuncMap{
         "query": func(key string) string {
             return r.URL.Query().Get(key)
@@ -119,31 +226,47 @@ func Render(w http.ResponseWriter, r *http.Request, name string, data any) error
     }
 
     // Clone template so funcs are local to this request
-    Template, err := Template.Clone()
+    tmpl, err := Template.Clone()
     if err != nil {
         return err
     }
 
-    Template = Template.Funcs(funcs)
+    tmpl = tmpl.Funcs(funcs)
+
+    //tmpl := template.Must(Template.Clone())
+    bytes, err := os.ReadFile("views/" + name)
+    if err != nil {
+        return err
+    }
+
+    tmpl = template.Must(tmpl.Parse(string(bytes)))
+
+
+    // Query parameters
+    queryMap := make(map[string]string)
+    for key, values := range r.URL.Query() {
+        if len(values) > 0 {
+            queryMap[key] = values[0]
+        }
+    }
+    queryAll := make(map[string][]string)
+    maps.Copy(queryAll, r.URL.Query())
+
+    // Flash data
+    flashData := session.GetFlash(w, r)
+    oldData := flashData["old"]
+    if oldData == nil {
+        oldData = make(map[string]any)
+    }
 
 	payload := map[string]any{
         "currentPath": r.URL.Path,
+        "query": queryMap, 
+        "queryAll": queryAll,
+        "flash": flashData,
+        "old": oldData,
     }
-
-	// If original data is map, merge it
-    if m, ok := data.(map[string]any); ok {
-        for k, v := range m {
-            payload[k] = v
-        }
-    } else if data != nil {
-        // Otherwise put struct under "Data"
-        payload["data"] = data
-    }
-
-    // 
-    tmpl := template.Must(Template.Clone())
-    bytes, _ := os.ReadFile("views/" + name)
-    tmpl = template.Must(tmpl.Parse(string(bytes)))
+    maps.Copy(payload, data)
 
 	return tmpl.ExecuteTemplate(w, name, payload)
 }

@@ -10,19 +10,19 @@
 <form action="/employees/{{ .employee.Id }}/update" method="post">
     <div class="mb-3">
         <label for="name" class="form-label">Name</label>
-        <input type="text" class="form-control" id="name" name="name" placeholder="Full name" value="{{ .employee.Name }}" required>
+        <input type="text" class="form-control" id="name" name="name" placeholder="Full name" value="{{ default .old.name .employee.Name }}" required>
     </div>
     <div class="row">
         <div class="col-md-6">
             <div class="mb-3">
                 <label for="email" class="form-label">Email</label>
-                <input type="text" class="form-control" id="email" name="email" placeholder="Email address" value="{{ default .employee.Email.String "" }}" required>
+                <input type="text" class="form-control" id="email" name="email" placeholder="Email address" value="{{ default .old.email .employee.Email.String }}" required>
             </div>
         </div>
         <div class="col-md-6">
             <div class="mb-3">
                 <label for="tax_number" class="form-label">Tax Number</label>
-                <input type="text" class="form-control" id="tax_number" name="tax_number" placeholder="Tax number" value="{{ default .employee.TaxNumber.String "" }}" maxlength="20">
+                <input type="text" class="form-control" id="tax_number" name="tax_number" placeholder="Tax number" value="{{ default .old.tax_number .employee.TaxNumber.String }}" maxlength="20">
             </div>
         </div>
     </div>
@@ -32,13 +32,13 @@
                 <label for="gender" class="form-label">Gender</label>
                 <div>
                     <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="gender" id="male" value="Male" {{ if eq (default .employee.Gender.String "") "Male" }} checked {{ end }}>
+                        <input class="form-check-input" type="radio" name="gender" id="male" value="Male" {{ if eq (default .old.gender .employee.Gender.String) "Male" }} checked {{ end }}>
                         <label class="form-check-label" for="male">
                             Male
                         </label>
                     </div>
                     <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="gender" id="female" value="Female" {{ if eq (default .employee.Gender.String "") "Female" }} checked {{ end }}>
+                        <input class="form-check-input" type="radio" name="gender" id="female" value="Female" {{ if eq (default .old.gender .employee.Gender.String) "Female" }} checked {{ end }}>
                         <label class="form-check-label" for="female">
                             Female
                         </label>
@@ -49,57 +49,58 @@
         <div class="col-md-6">
             <div class="mb-3">
                 <label for="hired_date" class="form-label">Hired Date</label>
-                <input type="date" class="form-control" id="hired_date" name="hired_date" placeholder="Hired date" maxlength="20" value="{{ formatDate .employee.HiredDate "2006-01-02" "" }}">
+                <input type="date" class="form-control" id="hired_date" name="hired_date" placeholder="Hired date" maxlength="20" value="{{ formatDate (default .old.hired_date .employee.HiredDate) "2006-01-02" "" }}">
             </div>
         </div>
     </div>
     <div class="mb-3">
         <label for="address" class="form-label">Address</label>
-        <textarea class="form-control" id="address" name="address" rows="3" placeholder="Address" maxlength="300">{{ default .employee.Address.String "" }}</textarea>
+        <textarea class="form-control" id="address" name="address" rows="3" placeholder="Address" maxlength="300">{{ default .old.address .employee.Address.String }}</textarea>
     </div>
     <div class="mb-3">
         <label for="status" class="form-label">Status</label>
         <select class="form-select" id="status" name="status" aria-label="Employee status">
             <option selected>Select status</option>
-            <option value="PENDING" {{ if eq .employee.Status.String "PENDING" }} selected {{ end }}>PENDING</option>
-            <option value="ACTIVE" {{ if eq .employee.Status.String "ACTIVE" }} selected {{ end }}>ACTIVE</option>
-            <option value="INACTIVE" {{ if eq .employee.Status.String "INACTIVE" }} selected {{ end }}>INACTIVE</option>
+            <option value="PENDING" {{ if eq (default .old.status .employee.Status.String) "PENDING" }} selected {{ end }}>PENDING</option>
+            <option value="ACTIVE" {{ if eq (default .old.status .employee.Status.String) "ACTIVE" }} selected {{ end }}>ACTIVE</option>
+            <option value="INACTIVE" {{ if eq (default .old.status .employee.Status.String) "INACTIVE" }} selected {{ end }}>INACTIVE</option>
         </select>
     </div>
     <div class="mb-3">
         <label for="status" class="form-label">Allowance</label>
+        {{ $allowanceList := pluck .employeeAllowances "Allowance" }}
         <div class="form-check">
-            <input class="form-check-input" type="checkbox" value="Medical" name="allowances" id="allowance_medical" {{ if containsByField .employeeAllowances "Allowance" "Medical" }} checked {{ end }}>
+            <input class="form-check-input" type="checkbox" value="Medical" name="allowances" id="allowance_medical" {{ if contains (default .old.allowances $allowanceList) "Medical" }} checked {{ end }}>
             <label class="form-check-label" for="allowance_medical">
                 Medical
             </label>
         </div>
         <div class="form-check">
-            <input class="form-check-input" type="checkbox" value="Transportation" name="allowances" id="allowance_transportation" {{ if containsByField .employeeAllowances "Allowance" "Transportation" }} checked {{ end }}>
+            <input class="form-check-input" type="checkbox" value="Transportation" name="allowances" id="allowance_transportation" {{ if contains (default .old.allowances $allowanceList) "Transportation" }} checked {{ end }}>
             <label class="form-check-label" for="allowance_transportation">
                 Transportation
             </label>
         </div>
         <div class="form-check">
-            <input class="form-check-input" type="checkbox" value="Housing" name="allowances" id="allowance_housing" {{ if containsByField .employeeAllowances "Allowance" "Housing" }} checked {{ end }}>
+            <input class="form-check-input" type="checkbox" value="Housing" name="allowances" id="allowance_housing" {{ if contains (default .old.allowances $allowanceList) "Housing" }} checked {{ end }}>
             <label class="form-check-label" for="allowance_housing">
                 Housing
             </label>
         </div>
         <div class="form-check">
-            <input class="form-check-input" type="checkbox" value="Education" name="allowances" id="allowance_education" {{ if containsByField .employeeAllowances "Allowance" "Education" }} checked {{ end }}>
+            <input class="form-check-input" type="checkbox" value="Education" name="allowances" id="allowance_education" {{ if contains (default .old.allowances $allowanceList) "Education" }} checked {{ end }}>
             <label class="form-check-label" for="allowance_education">
                 Education
             </label>
         </div>
         <div class="form-check">
-            <input class="form-check-input" type="checkbox" value="Childcare" name="allowances" id="allowance_childcare" {{ if containsByField .employeeAllowances "Allowance" "Childcare" }} checked {{ end }}>
+            <input class="form-check-input" type="checkbox" value="Childcare" name="allowances" id="allowance_childcare" {{ if contains (default .old.allowances $allowanceList) "Childcare" }} checked {{ end }}>
             <label class="form-check-label" for="allowance_childcare">
                 Childcare
             </label>
         </div>
         <div class="form-check">
-            <input class="form-check-input" type="checkbox" value="Entertainment" name="allowances" id="allowance_entertainment" {{ if containsByField .employeeAllowances "Allowance" "Entertainment" }} checked {{ end }}>
+            <input class="form-check-input" type="checkbox" value="Entertainment" name="allowances" id="allowance_entertainment" {{ if contains (default .old.allowances $allowanceList) "Entertainment" }} checked {{ end }}>
             <label class="form-check-label" for="allowance_entertainment">
                 Entertainment
             </label>

@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	appErrors "github.com/anggadarkprince/crud-employee-go/errors"
+	"github.com/anggadarkprince/crud-employee-go/exceptions"
 	"github.com/anggadarkprince/crud-employee-go/models"
 	"github.com/anggadarkprince/crud-employee-go/repositories"
 	"github.com/golang-jwt/jwt/v5"
@@ -42,18 +42,18 @@ func (service *AuthService) Authenticate(ctx context.Context, username string, p
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, appErrors.ErrUserNotFound
+			return nil, exceptions.ErrUserNotFound
 		}
 		return nil, err
 	}
 
 	if user.Status != "ACTIVATED" {
-		return nil, appErrors.ErrUserInactive
+		return nil, exceptions.ErrUserInactive
 	} 
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
     if err != nil {
-		return nil, appErrors.ErrWrongPassword
+		return nil, exceptions.ErrWrongPassword
 	}
 
 	return user, nil	

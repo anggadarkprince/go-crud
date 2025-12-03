@@ -10,6 +10,8 @@
     </h1>
     <p class="small text-muted mb-3">Please log in to your account.</p>
 
+    {{ template "alert" . }}
+
     <form action="/authenticate" method="post" class="need-validation">
         <div class="mb-3">
             <label for="username" class="form-label">
@@ -21,6 +23,7 @@
                 id="username"
                 name="username"
                 placeholder="Username or email address"
+                value="{{ default .old.username "" }}"
             />
         </div>
         <div class="mb-3">
@@ -33,6 +36,7 @@
                 id="password"
                 name="password"
                 placeholder="Password"
+                value="{{ default .old.password "" }}"
             />
         </div>
 
