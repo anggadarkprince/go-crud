@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/anggadarkprince/crud-employee-go/dto"
 	"github.com/anggadarkprince/crud-employee-go/exceptions"
 	"github.com/anggadarkprince/crud-employee-go/services"
 	"github.com/anggadarkprince/crud-employee-go/utilities"
@@ -21,11 +22,11 @@ func NewAuthController(authService *services.AuthService) *AuthController {
 	return &AuthController{authService: authService}
 }
 
-func (controller *AuthController) Index(w http.ResponseWriter, r *http.Request) error {
+func (controller *AuthController) Login(w http.ResponseWriter, r *http.Request) error {
 	return utilities.Render(w, r, "auth/login.html", nil)
 }
 
-func (controller *AuthController) Login(w http.ResponseWriter, r *http.Request) error {
+func (controller *AuthController) Authenticate(w http.ResponseWriter, r *http.Request) error {
 	username := r.FormValue("username")
 	password := r.FormValue("password")
 	remember := r.FormValue("remember") == "1"
@@ -104,6 +105,35 @@ func (controller *AuthController) Login(w http.ResponseWriter, r *http.Request) 
 		return nil
 	}
 	return err
+}
+
+func (controller *AuthController) Register(w http.ResponseWriter, r *http.Request) error {
+	return utilities.Render(w, r, "auth/register.html", nil)
+}
+
+func (controller *AuthController) RegisterUser(w http.ResponseWriter, r *http.Request) error {
+	if err := r.ParseForm(); err != nil {
+        return err
+    }
+	data := &dto.RegisterUserRequest{
+		Name: r.FormValue("name"),
+		Email: r.FormValue("email"),
+		Username: r.FormValue("username"),
+		Password: r.FormValue("password"),
+		PasswordConfirmation: r.FormValue("password_confirmation"),
+		Agreement: r.FormValue("agreement"),
+	}
+	err := validation.Validator.Struct(data)
+    if err != nil {
+		return err
+	}
+
+	controller.authService.Register(r.Context(), data)
+
+	session.Flash(w, "success", "User is registered")
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+	return nil
 }
 
 func (controller *AuthController) Logout(w http.ResponseWriter, r *http.Request) error {

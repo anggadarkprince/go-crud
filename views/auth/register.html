@@ -1,0 +1,71 @@
+{{ template "auth_layout" . }}
+
+{{ define "title" }} Register {{ end }}
+
+{{ define "content" }}
+<main class="form-register w-100 m-auto">
+    <h1 class="h3 mb-0 fw-semibold">
+        <i class="mdi mdi-layers-outline me-2"></i>
+        Application
+    </h1>
+    <p class="small text-muted mb-3">Register your account.</p>
+
+    {{ template "alert" . }}
+
+    <form action="/register-user" method="post" class="need-validation">
+        <div class="mb-3">
+            <label for="name" class="form-label">Name</label>
+            <input type="text" class="form-control {{ if has .errors "name" }} is-invalid {{ end }}" id="name" name="name"
+                    placeholder="Your full name" value="{{ default .old.name "" }}">
+            {{ if has .errors "name" }} <div class="invalid-feedback">{{ get .errors "name" }}</div> {{ end }}
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="username" class="form-label">Username</label>
+                    <input type="text" class="form-control {{ if has .errors "username" }} is-invalid {{ end }}" id="username" name="username"
+                            placeholder="Username or email address" value="{{ default .old.username "" }}">
+                    {{ if has .errors "username" }} <div class="invalid-feedback">{{ get .errors "username" }}</div> {{ end }}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control {{ if has .errors "email" }} is-invalid {{ end }}" id="email" name="email"
+                            placeholder="Email address" value="{{ default .old.email "" }}">
+                    {{ if has .errors "email" }} <div class="invalid-feedback">{{ get .errors "email" }}</div> {{ end }}
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" class="form-control {{ if has .errors "password" }} is-invalid {{ end }}" id="password" name="password"
+                            placeholder="New password">
+                    {{ if has .errors "password" }} <div class="invalid-feedback">{{ get .errors "password" }}</div> {{ end }}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="password_confirmation" class="form-label">Confirm Password</label>
+                    <input type="password" class="form-control {{ if has .errors "password_confirmation" }} is-invalid {{ end }}" id="password_confirmation" name="password_confirmation"
+                            placeholder="Repeat the password">
+                    {{ if has .errors "password_confirmation" }} <div class="invalid-feedback">{{ get .errors "password_confirmation" }}</div> {{ end }}
+                </div>
+            </div>
+        </div>
+        <div class="form-check text-start mb-4">
+            <input class="form-check-input {{ if has .errors "agreement" }} is-invalid {{ end }}" type="checkbox" value="1" name="agreement" id="agreement" {{ if eq .old.agreement "1" }} checked {{ end }}>
+            <label class="form-check-label" for="agreement">
+                I agree with terms & conditions
+            </label>
+            {{ if has .errors "agreement" }} <div class="invalid-feedback">{{ get .errors "agreement" }}</div> {{ end }}
+        </div>
+        <button class="btn btn-success w-100 py-2 mb-3" type="submit" data-toggle="one-touch">Register</button>
+        <div class="text-center">
+            <p>Already have account? <a href="/login">Login now</a></p>
+        </div>
+    </form>
+</main>
+{{ end }}

@@ -111,3 +111,32 @@ func (repository *UserRepository) GetByUsername(ctx context.Context, username st
 	
 	return repository.mapResultToUser(row)
 }
+
+func (repository *UserRepository) Create(ctx context.Context, user *models.User) (*models.User, error) {
+	query := `
+		INSERT INTO users(name, username, email, password, user_type, status, avatar)
+		VALUES(?, ?, ?, ?, ?, ?, ?)
+	`
+	result, err := repository.db.ExecContext(
+		ctx,
+		query,
+		user.Name,
+		user.Username,
+		user.Email,
+		user.Password,
+		user.UserType,
+		user.Status,
+		user.Avatar,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	employeeId, err := result.LastInsertId()
+	if err != nil {
+		return nil, err
+	}
+
+	return repository.GetById(ctx, int(employeeId))
+}

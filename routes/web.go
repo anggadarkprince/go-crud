@@ -80,8 +80,10 @@ func MapRoutes(server *http.ServeMux, db *sql.DB) {
 		SecretKey: os.Getenv("JWT_SECRET"),
 	}
 
-	server.Handle("/login", auth.GuestMiddleware(HandlerFunc(authController.Index)))
-	server.Handle("/authenticate", auth.GuestMiddleware(HandlerFunc(authController.Login)))
+	server.Handle("/login", auth.GuestMiddleware(HandlerFunc(authController.Login)))
+	server.Handle("/authenticate", auth.GuestMiddleware(HandlerFunc(authController.Authenticate)))
+	server.Handle("/register", auth.GuestMiddleware(HandlerFunc(authController.Register)))
+	server.Handle("/register-user", auth.GuestMiddleware(HandlerFunc(authController.RegisterUser)))
 	server.Handle("/logout", auth.AuthMiddleware(HandlerFunc(authController.Logout)))
 
 	dashboardRepository := repositories.NewDashboardRepository(db)

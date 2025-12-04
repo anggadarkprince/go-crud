@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/anggadarkprince/crud-employee-go/dto"
 	"github.com/anggadarkprince/crud-employee-go/exceptions"
 	"github.com/anggadarkprince/crud-employee-go/models"
 	"github.com/anggadarkprince/crud-employee-go/repositories"
@@ -57,6 +58,28 @@ func (service *AuthService) Authenticate(ctx context.Context, username string, p
 	}
 
 	return user, nil	
+}
+
+
+func (service *AuthService) Register(ctx context.Context, data *dto.RegisterUserRequest) (*models.User, error) {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(data.Password), bcrypt.DefaultCost)
+    if err != nil {
+        return nil, err
+    }
+
+	userModel := &models.User{
+        Name: data.Name,
+        Email: data.Email,
+        Username: data.Username,
+        Password: string(hashedPassword),
+        UserType: "EXTERNAL",
+        Status: "ACTIVATED",
+    }
+	user, err := service.userRepository.Create(ctx, userModel)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }
 
 func (service *AuthService) GenerateAuthToken(userId int, exp int64) (string, error)  {
