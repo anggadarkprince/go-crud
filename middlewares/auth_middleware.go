@@ -3,9 +3,9 @@ package middlewares
 import (
 	"context"
 	"net/http"
-	"os"
 	"strconv"
 
+	"github.com/anggadarkprince/crud-employee-go/configs"
 	"github.com/anggadarkprince/crud-employee-go/models"
 	"github.com/anggadarkprince/crud-employee-go/repositories"
 	"github.com/golang-jwt/jwt/v5"
@@ -24,10 +24,7 @@ type Auth struct {
 
 func (c *Auth) GetAuthToken(r *http.Request) string {
 	var tokenString string
-	var cookieName = os.Getenv("COOKIE_NAME")
-	if cookieName == "" {
-		cookieName = "auth_token"
-	}
+	cookieName := configs.Get().Session.CookieName
 	cookie, err := r.Cookie(cookieName)
 	if err != nil {
 		// Cookie not found, try Authorization header

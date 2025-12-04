@@ -3,9 +3,9 @@ package controllers
 import (
 	"errors"
 	"net/http"
-	"os"
 	"time"
 
+	"github.com/anggadarkprince/crud-employee-go/configs"
 	"github.com/anggadarkprince/crud-employee-go/dto"
 	"github.com/anggadarkprince/crud-employee-go/exceptions"
 	"github.com/anggadarkprince/crud-employee-go/services"
@@ -81,21 +81,17 @@ func (controller *AuthController) Authenticate(w http.ResponseWriter, r *http.Re
 			return err
 		}
 
-		var cookieName = os.Getenv("COOKIE_NAME")
-		if cookieName == "" {
-			cookieName = "auth_token"
-		}
-		var maxAge = 7200;
+		var maxAge = configs.Get().Session.Lifetime;
 		if remember {
 			maxAge = 3600 * 24 * 30
 		}
 
 		cookie := http.Cookie{
-			Name: cookieName,
+			Name: configs.Get().Session.CookieName,
 			Value: authToken,
-			Path: "/",
+			Path: configs.Get().Session.Path,
 			HttpOnly: true, // cannot be accessed by JS (secure)
-			Secure: false, // set to true in HTTPS
+			Secure: configs.Get().Session.Secure, // set to true in HTTPS
 			SameSite: http.SameSiteLaxMode,
 			MaxAge: maxAge,
 		}
@@ -137,18 +133,15 @@ func (controller *AuthController) RegisterUser(w http.ResponseWriter, r *http.Re
 }
 
 func (controller *AuthController) Logout(w http.ResponseWriter, r *http.Request) error {
-    var cookieName = os.Getenv("COOKIE_NAME")
-	if cookieName == "" {
-		cookieName = "auth_token"
-	}
+    cookieName := configs.Get().Session.CookieName
 
     cookie := http.Cookie{
         Name: cookieName,
         Value: "",
-        Path: "/",
+        Path: configs.Get().Session.Path,
         MaxAge: -1,
         HttpOnly: true,
-        Secure: false, // set true in production (HTTPS)
+        Secure: configs.Get().Session.Secure, // set true in production (HTTPS)
         SameSite: http.SameSiteLaxMode,
     }
     http.SetCookie(w, &cookie)

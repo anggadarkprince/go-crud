@@ -3,26 +3,20 @@ package database
 import (
 	"context"
 	"database/sql"
-	"os"
 	"time"
 
+	"github.com/anggadarkprince/crud-employee-go/configs"
 	_ "github.com/go-sql-driver/mysql"
 )
 
 func InitDatabase() *sql.DB {
-	host := os.Getenv("DB_HOST")
-	port := os.Getenv("DB_PORT")
-	database := os.Getenv("DB_DATABASE")
-	username := os.Getenv("DB_USERNAME")
-	password := os.Getenv("DB_PASSWORD")
-
-	db, err := sql.Open("mysql", username + ":" + password + "@tcp(" + host + ":" + port + ")/" + database + "?parseTime=true")
+	db, err := sql.Open("mysql", configs.Get().Database.DSN())
 	if err != nil {
 		panic(err)
 	}
-	db.SetMaxOpenConns(10) // Max number of open connections
-	db.SetMaxIdleConns(5) // Max number of idle connections
-	db.SetConnMaxLifetime(5 * time.Minute)  // Max lifetime for a connection
+	db.SetMaxOpenConns(10)                 // Max number of open connections
+	db.SetMaxIdleConns(5)                  // Max number of idle connections
+	db.SetConnMaxLifetime(5 * time.Minute) // Max lifetime for a connection
 
 	err = db.Ping()
 	if err != nil {
@@ -33,8 +27,8 @@ func InitDatabase() *sql.DB {
 }
 
 type Transaction interface {
-    ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
+	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
 	PrepareContext(ctx context.Context, query string) (*sql.Stmt, error)
-    QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
-    QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
+	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
+	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
 }

@@ -5,10 +5,10 @@ import (
 	"database/sql"
 	"errors"
 	"net/mail"
-	"os"
 	"strconv"
 	"time"
 
+	"github.com/anggadarkprince/crud-employee-go/configs"
 	"github.com/anggadarkprince/crud-employee-go/dto"
 	"github.com/anggadarkprince/crud-employee-go/exceptions"
 	"github.com/anggadarkprince/crud-employee-go/models"
@@ -24,8 +24,6 @@ type AuthService struct {
 func NewAuthService(userRepository *repositories.UserRepository) *AuthService {
 	return &AuthService{userRepository: userRepository}
 }
-
-var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
 
 func (service *AuthService) Authenticate(ctx context.Context, username string, password string) (*models.User, error) {
 	isEmail := true
@@ -90,5 +88,5 @@ func (service *AuthService) GenerateAuthToken(userId int, exp int64) (string, er
     }
 
     token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-    return token.SignedString(jwtSecret)
+    return token.SignedString([]byte(configs.Get().Auth.JwtSecret))
 }

@@ -4,9 +4,9 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"net/http"
-)
 
-const flashCookieName = "flash_messages"
+	"github.com/anggadarkprince/crud-employee-go/configs"
+)
 
 type FlashData map[string]any
 
@@ -20,9 +20,9 @@ func SetFlash(w http.ResponseWriter, data FlashData) {
     encoded := base64.StdEncoding.EncodeToString(jsonData)
     
     cookie := &http.Cookie{
-        Name: flashCookieName,
+        Name: configs.Get().Session.StoreName,
         Value: encoded,
-        Path: "/",
+        Path: configs.Get().Session.Path,
         HttpOnly: true,
         MaxAge: 60, // 60 seconds - short lived
         SameSite: http.SameSiteLaxMode,
@@ -43,14 +43,14 @@ func Flash(w http.ResponseWriter, messageType, message string) {
 
 // GetFlash retrieves and deletes all flash messages
 func GetFlash(w http.ResponseWriter, r *http.Request) FlashData {
-    cookie, err := r.Cookie(flashCookieName)
+    cookie, err := r.Cookie(configs.Get().Session.StoreName)
     if err != nil {
         return nil
     }
     
     // Delete the cookie immediately
     http.SetCookie(w, &http.Cookie{
-        Name: flashCookieName,
+        Name: configs.Get().Session.StoreName,
         Value: "",
         Path: "/",
         MaxAge: -1,

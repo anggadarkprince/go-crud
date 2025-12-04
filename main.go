@@ -3,20 +3,19 @@ package main
 import (
 	"log"
 	"net/http"
-	"os"
+	"strconv"
 
+	"github.com/anggadarkprince/crud-employee-go/configs"
 	"github.com/anggadarkprince/crud-employee-go/database"
 	"github.com/anggadarkprince/crud-employee-go/routes"
 	"github.com/anggadarkprince/crud-employee-go/utilities"
 	"github.com/anggadarkprince/crud-employee-go/utilities/validation"
-	"github.com/joho/godotenv"
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Println("No .env file found")
-	}
+	if _, err := configs.Load(); err != nil {
+        log.Fatal("Failed to load config:", err)
+    }
 	
 	utilities.InitTemplates()
 
@@ -31,6 +30,8 @@ func main() {
 	})
 	routes.MapRoutes(server, db)
 
-	app_port := os.Getenv("APP_PORT")
-	http.ListenAndServe(":" + app_port, server)
+	port := configs.Get().App.Port
+	portStr := strconv.Itoa(int(port))
+
+	http.ListenAndServe(":" + portStr, server)
 }

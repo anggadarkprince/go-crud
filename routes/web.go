@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 
+	"github.com/anggadarkprince/crud-employee-go/configs"
 	"github.com/anggadarkprince/crud-employee-go/controllers"
 	"github.com/anggadarkprince/crud-employee-go/exceptions"
 	"github.com/anggadarkprince/crud-employee-go/middlewares"
@@ -77,7 +77,7 @@ func MapRoutes(server *http.ServeMux, db *sql.DB) {
 
 	auth := &middlewares.Auth{
 		UserRepository: userRepository,
-		SecretKey: os.Getenv("JWT_SECRET"),
+		SecretKey: configs.Get().Auth.JwtSecret,
 	}
 
 	server.Handle("/login", auth.GuestMiddleware(HandlerFunc(authController.Login)))
