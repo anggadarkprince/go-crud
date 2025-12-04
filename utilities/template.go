@@ -150,6 +150,13 @@ var TemplateFuncs = template.FuncMap{
         
         return result
     },
+    "has": func(values map[string]any, field string) bool {
+        _, exists := values[field]
+        return exists
+    },
+    "get": func(values map[string]any, field string) any {
+        return values[field]
+    },
     "default": func(value any, fallback any) any {
         if value == nil {
             return fallback
@@ -259,6 +266,11 @@ func Render(w http.ResponseWriter, r *http.Request, name string, data map[string
     if oldData == nil {
         oldData = make(map[string]any)
     }
+    errorMessage := flashData["error"]
+    errorsData := flashData["errors"]
+    if errorsData == nil {
+        errorsData = make(map[string]any)
+    }
     
     // Authenticated user
     authData := make(map[string]any)
@@ -270,6 +282,8 @@ func Render(w http.ResponseWriter, r *http.Request, name string, data map[string
         "queryAll": queryAll,
         "flash": flashData,
         "old": oldData,
+        "error": errorMessage,
+        "errors": errorsData,
         "auth": authData,
     }
     maps.Copy(payload, data)

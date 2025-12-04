@@ -23,6 +23,14 @@ func TitleCase(s string) string {
 func TitleCaseID(s string) string {
     return titleCaserID.String(strings.ToLower(s))
 }
+func Capitalize(s string) string {
+    if len(s) == 0 {
+        return s
+    }
+    s = strings.ReplaceAll(s, "_", " ")
+    s = strings.ReplaceAll(s, "-", " ")
+    return strings.ToUpper(s[:1]) + s[1:]
+}
 
 // Generate secure random string
 func RandomString(n int) string {

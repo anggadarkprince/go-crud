@@ -8,6 +8,7 @@ import (
 	"github.com/anggadarkprince/crud-employee-go/database"
 	"github.com/anggadarkprince/crud-employee-go/routes"
 	"github.com/anggadarkprince/crud-employee-go/utilities"
+	"github.com/anggadarkprince/crud-employee-go/utilities/validation"
 	"github.com/joho/godotenv"
 )
 
@@ -18,6 +19,8 @@ func main() {
 	}
 	
 	utilities.InitTemplates()
+
+	validation.Init()
 
 	db := database.InitDatabase()
 	

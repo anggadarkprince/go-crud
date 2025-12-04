@@ -10,6 +10,7 @@ import (
 	"github.com/anggadarkprince/crud-employee-go/services"
 	"github.com/anggadarkprince/crud-employee-go/utilities"
 	"github.com/anggadarkprince/crud-employee-go/utilities/session"
+	"github.com/anggadarkprince/crud-employee-go/utilities/validation"
 )
 
 type Employee struct {
@@ -77,7 +78,12 @@ func (c *EmployeeController) Store(w http.ResponseWriter, r *http.Request) error
 		Address: r.FormValue("address"),
 		Status: r.FormValue("status"),
 		Allowances: allowances,
-	}	
+	}
+	err := validation.Validator.Struct(data)
+    if err != nil {
+		return err
+	}
+
 	employee, err := c.employeeService.Store(r.Context(), data)
 	if err != nil {
         return err
@@ -155,7 +161,12 @@ func (c *EmployeeController) Update(w http.ResponseWriter, r *http.Request) erro
 		Address: r.FormValue("address"),
 		Status: r.FormValue("status"),
 		Allowances: allowances,
-	}	
+	}
+	err = validation.Validator.Struct(data)
+    if err != nil {
+		return err
+	}
+
 	employee, err := c.employeeService.Update(r.Context(), data)
 	if err != nil {
         return err

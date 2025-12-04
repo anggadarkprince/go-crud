@@ -1,7 +1,20 @@
 {{ define "alert" }}
     {{ if .flash.alert.message }}
         <div class="alert alert-{{ default .flash.alert.type "light" }} alert-dismissible fade show" role="alert">
-            {{ .flash.alert.message }}
+            {{ if .error }}
+                {{ if .errors }}
+                    <p class="mb-1 fw-bold">{{ .error }}</p>
+                    <ul class="mb-1 ps-3">
+                        {{ range $key, $value := .errors }}
+                            <li>{{ $value }}</li>
+                        {{ end }}
+                    </ul>
+                {{ else }}
+                    {{ .error }}
+                {{ end }}
+            {{ else }}
+                {{ .flash.alert.message }}
+            {{ end }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     {{ end }}

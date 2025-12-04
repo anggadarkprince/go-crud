@@ -59,10 +59,10 @@ func (service *AuthService) Authenticate(ctx context.Context, username string, p
 	return user, nil	
 }
 
-func (service *AuthService) GenerateAuthToken(userId int) (string, error)  {
+func (service *AuthService) GenerateAuthToken(userId int, exp int64) (string, error)  {
     claims := jwt.MapClaims{
         "sub": strconv.Itoa(userId), // subject: user id
-        "exp": time.Now().Add(24 * time.Hour).Unix(), // expires in 24h
+        "exp": exp,
         "iat": time.Now().Unix(), // issued at
     }
 

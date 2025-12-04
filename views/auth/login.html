@@ -1,6 +1,6 @@
 {{ template "auth_layout" . }}
 
-{{ define "title" }}Login{{ end }}
+{{ define "title" }} Login {{ end }}
 
 {{ define "content" }}
 <main class="form-auth w-100 m-auto">
@@ -19,12 +19,13 @@
             </label>
             <input
                 type="text"
-                class="form-control"
+                class="form-control {{ if has .errors "username" }} is-invalid {{ end }}"
                 id="username"
                 name="username"
                 placeholder="Username or email address"
                 value="{{ default .old.username "" }}"
             />
+            {{ if has .errors "username" }} <div class="invalid-feedback">{{ get .errors "username" }}</div> {{ end }}
         </div>
         <div class="mb-3">
             <label for="password" class="form-label">
@@ -32,12 +33,13 @@
             </label>
             <input
                 type="password"
-                class="form-control"
+                class="form-control {{ if has .errors "password" }} is-invalid {{ end }}"
                 id="password"
                 name="password"
                 placeholder="Password"
                 value="{{ default .old.password "" }}"
             />
+            {{ if has .errors "password" }} <div class="invalid-feedback">{{ get .errors "password" }}</div> {{ end }}
         </div>
 
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -53,7 +55,6 @@
                     Remember me
                 </label>
             </div>
-            <a href="/forgot-password">Forgot Password?</a>
         </div>
         <button class="btn btn-primary w-100 py-2 mb-4" data-toggle="one-touch" type="submit">
             Sign in

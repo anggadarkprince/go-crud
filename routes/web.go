@@ -14,24 +14,55 @@ import (
 	"github.com/anggadarkprince/crud-employee-go/repositories"
 	"github.com/anggadarkprince/crud-employee-go/services"
 	"github.com/anggadarkprince/crud-employee-go/utilities/session"
+	"github.com/anggadarkprince/crud-employee-go/utilities/validation"
+	"github.com/go-playground/validator/v10"
 )
 
 type HandlerFunc func(w http.ResponseWriter, r *http.Request) error
 func (h HandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     err := h(w, r)
     if err != nil {
+		var errorMessage string
+		var errorData map[string]string
+
+		// Validation error
+		if validationErrors, ok := err.(validator.ValidationErrors); ok {
+			validationErrors := validation.FormatValidationErrors(validationErrors)
+			errorMessage = "Please check the data you provided."
+			errorData = validationErrors
+		} else {
+			fmt.Println("Error", err.Error())
+		}
+
+		if validationErrors, ok := err.(*exceptions.ValidationError); ok {
+			errorMessage = validationErrors.Message
+			errorData = validationErrors.Errors
+		}
+		
 		referer := r.Header.Get("referer")
 		accept := r.Header.Get("accept")
 		method := r.Method
-		fmt.Println("Error", err.Error())
 		if (method != "GET" && strings.Contains(accept, "text/html") && referer != "") {
 			oldInput := session.ParseFormInput(r)
-			message := err.Error()
+
 			var appErr *exceptions.AppError
 			if errors.As(err, &appErr) {
-				message = appErr.Message
+				errorMessage = appErr.Message
 			}
-			session.FlashWithInput(w, "danger", message, oldInput)
+			if errorMessage == "" {
+				errorMessage = err.Error()
+			}
+			
+			flashData := session.FlashData{
+				"alert": map[string]string{
+					"type": "danger",
+					"message": errorMessage,
+				},
+				"old": oldInput,
+				"error": errorMessage,
+				"errors": errorData,
+			}
+			session.SetFlash(w, flashData)
 			http.Redirect(w, r, referer, http.StatusSeeOther)
 			return
 		}

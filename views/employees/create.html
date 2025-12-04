@@ -10,19 +10,22 @@
 <form action="/employees/store" method="post">
     <div class="mb-3">
         <label for="name" class="form-label">Name</label>
-        <input type="text" class="form-control" id="name" name="name" placeholder="Full name" value="{{ default .old.name "" }}" required>
+        <input type="text" class="form-control {{ if has .errors "name" }} is-invalid {{ end }}" id="name" name="name" placeholder="Full name" value="{{ default .old.name "" }}">
+        {{ if has .errors "name" }} <div class="invalid-feedback">{{ get .errors "name" }}</div> {{ end }}
     </div>
     <div class="row">
         <div class="col-md-6">
             <div class="mb-3">
                 <label for="email" class="form-label">Email</label>
-                <input type="text" class="form-control" id="email" name="email" placeholder="Email address" value="{{ default .old.email "" }}" required>
+                <input type="text" class="form-control {{ if has .errors "email" }} is-invalid {{ end }}" id="email" name="email" placeholder="Email address" value="{{ default .old.email "" }}">
+                {{ if has .errors "email" }} <div class="invalid-feedback">{{ get .errors "email" }}</div> {{ end }}
             </div>
         </div>
         <div class="col-md-6">
             <div class="mb-3">
                 <label for="tax_number" class="form-label">Tax Number</label>
-                <input type="text" class="form-control" id="tax_number" name="tax_number" placeholder="Tax number" value="{{ default .old.tax_number "" }}" maxlength="20">
+                <input type="text" class="form-control {{ if has .errors "tax_number" }} is-invalid {{ end }}" id="tax_number" name="tax_number" placeholder="Tax number" value="{{ default .old.tax_number "" }}" maxlength="20">
+                {{ if has .errors "tax_number" }} <div class="invalid-feedback">{{ get .errors "tax_number" }}</div> {{ end }}
             </div>
         </div>
     </div>
@@ -32,77 +35,82 @@
                 <label for="gender" class="form-label">Gender</label>
                 <div>
                     <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="gender" id="male" value="Male" {{ if eq (default .old.gender "") "Male" }} checked {{ end }}>
+                        <input class="form-check-input {{ if has .errors "gender" }} is-invalid {{ end }}" type="radio" name="gender" id="male" value="Male" {{ if eq (default .old.gender "") "Male" }} checked {{ end }}>
                         <label class="form-check-label" for="male">
                             Male
                         </label>
                     </div>
                     <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="gender" id="female" value="Female" {{ if eq (default .old.gender "") "Female" }} checked {{ end }}>
+                        <input class="form-check-input {{ if has .errors "gender" }} is-invalid {{ end }}" type="radio" name="gender" id="female" value="Female" {{ if eq (default .old.gender "") "Female" }} checked {{ end }}>
                         <label class="form-check-label" for="female">
                             Female
                         </label>
                     </div>
                 </div>
+                {{ if has .errors "gender" }} <div class="form-text text-danger">{{ get .errors "gender" }}</div> {{ end }}
             </div>
         </div>
         <div class="col-md-6">
             <div class="mb-3">
                 <label for="hired_date" class="form-label">Hired Date</label>
-                <input type="date" class="form-control" id="hired_date" name="hired_date" placeholder="Hired date" maxlength="20" value="{{ default .old.hired_date "" }}">
+                <input type="date" class="form-control {{ if has .errors "hired_date" }} is-invalid {{ end }}" id="hired_date" name="hired_date" placeholder="Hired date" maxlength="20" value="{{ default .old.hired_date "" }}">
+                {{ if has .errors "hired_date" }} <div class="invalid-feedback">{{ get .errors "hired_date" }}</div> {{ end }}
             </div>
         </div>
     </div>
     <div class="mb-3">
         <label for="address" class="form-label">Address</label>
-        <textarea class="form-control" id="address" name="address" rows="3" placeholder="Address" maxlength="300">{{ default .old.address "" }}</textarea>
+        <textarea class="form-control {{ if has .errors "address" }} is-invalid {{ end }}" id="address" name="address" rows="3" placeholder="Address" maxlength="300">{{ default .old.address "" }}</textarea>
+        {{ if has .errors "address" }} <div class="invalid-feedback">{{ get .errors "address" }}</div> {{ end }}
     </div>
     <div class="mb-3">
         <label for="status" class="form-label">Status</label>
-        <select class="form-select" id="status" name="status" aria-label="Employee status">
-            <option selected>Select status</option>
+        <select class="form-select {{ if has .errors "status" }} is-invalid {{ end }}" id="status" name="status" aria-label="Employee status">
+            <option value="" selected>Select status</option>
             <option value="PENDING" {{ if eq (default .old.status "") "PENDING" }} selected {{ end }}>PENDING</option>
             <option value="ACTIVE" {{ if eq (default .old.status "") "ACTIVE" }} selected {{ end }}>ACTIVE</option>
             <option value="INACTIVE" {{ if eq (default .old.status "") "INACTIVE" }} selected {{ end }}>INACTIVE</option>
         </select>
+        {{ if has .errors "status" }} <div class="invalid-feedback">{{ get .errors "status" }}</div> {{ end }}
     </div>
     <div class="mb-3">
         <label for="status" class="form-label">Allowance</label>
         <div class="form-check">
-            <input class="form-check-input" type="checkbox" value="Medical" name="allowances" id="allowance_medical" {{ if contains (default .old.allowances emptySlice) "Medical" }} checked {{ end }}>
+            <input class="form-check-input {{ if has .errors "allowances" }} is-invalid {{ end }}" type="checkbox" value="Medical" name="allowances" id="allowance_medical" {{ if contains (default .old.allowances emptySlice) "Medical" }} checked {{ end }}>
             <label class="form-check-label" for="allowance_medical">
                 Medical
             </label>
         </div>
         <div class="form-check">
-            <input class="form-check-input" type="checkbox" value="Transportation" name="allowances" id="allowance_transportation" {{ if contains (default .old.allowances emptySlice) "Transportation" }} checked {{ end }}>
+            <input class="form-check-input {{ if has .errors "allowances" }} is-invalid {{ end }}" type="checkbox" value="Transportation" name="allowances" id="allowance_transportation" {{ if contains (default .old.allowances emptySlice) "Transportation" }} checked {{ end }}>
             <label class="form-check-label" for="allowance_transportation">
                 Transportation
             </label>
         </div>
         <div class="form-check">
-            <input class="form-check-input" type="checkbox" value="Housing" name="allowances" id="allowance_housing" {{ if contains (default .old.allowances emptySlice) "Housing" }} checked {{ end }}>
+            <input class="form-check-input {{ if has .errors "allowances" }} is-invalid {{ end }}" type="checkbox" value="Housing" name="allowances" id="allowance_housing" {{ if contains (default .old.allowances emptySlice) "Housing" }} checked {{ end }}>
             <label class="form-check-label" for="allowance_housing">
                 Housing
             </label>
         </div>
         <div class="form-check">
-            <input class="form-check-input" type="checkbox" value="Education" name="allowances" id="allowance_education" {{ if contains (default .old.allowances emptySlice) "Education" }} checked {{ end }}>
+            <input class="form-check-input {{ if has .errors "allowances" }} is-invalid {{ end }}" type="checkbox" value="Education" name="allowances" id="allowance_education" {{ if contains (default .old.allowances emptySlice) "Education" }} checked {{ end }}>
             <label class="form-check-label" for="allowance_education">
                 Education
             </label>
         </div>
         <div class="form-check">
-            <input class="form-check-input" type="checkbox" value="Childcare" name="allowances" id="allowance_childcare" {{ if contains (default .old.allowances emptySlice) "Childcare" }} checked {{ end }}>
+            <input class="form-check-input {{ if has .errors "allowances" }} is-invalid {{ end }}" type="checkbox" value="Childcare" name="allowances" id="allowance_childcare" {{ if contains (default .old.allowances emptySlice) "Childcare" }} checked {{ end }}>
             <label class="form-check-label" for="allowance_childcare">
                 Childcare
             </label>
         </div>
         <div class="form-check">
-            <input class="form-check-input" type="checkbox" value="Entertainment" name="allowances" id="allowance_entertainment" {{ if contains (default .old.allowances emptySlice) "Entertainment" }} checked {{ end }}>
+            <input class="form-check-input {{ if has .errors "allowances" }} is-invalid {{ end }}" type="checkbox" value="Entertainment" name="allowances" id="allowance_entertainment" {{ if contains (default .old.allowances emptySlice) "Entertainment" }} checked {{ end }}>
             <label class="form-check-label" for="allowance_entertainment">
                 Entertainment
             </label>
+            {{ if has .errors "allowances" }} <div class="invalid-feedback">{{ get .errors "allowances" }}</div> {{ end }}
         </div>
     </div>
     <div class="mb-3 text-end">

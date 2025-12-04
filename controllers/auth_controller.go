@@ -4,11 +4,13 @@ import (
 	"errors"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/anggadarkprince/crud-employee-go/exceptions"
 	"github.com/anggadarkprince/crud-employee-go/services"
 	"github.com/anggadarkprince/crud-employee-go/utilities"
 	"github.com/anggadarkprince/crud-employee-go/utilities/session"
+	"github.com/anggadarkprince/crud-employee-go/utilities/validation"
 )
 
 type AuthController struct {
@@ -26,6 +28,23 @@ func (controller *AuthController) Index(w http.ResponseWriter, r *http.Request) 
 func (controller *AuthController) Login(w http.ResponseWriter, r *http.Request) error {
 	username := r.FormValue("username")
 	password := r.FormValue("password")
+	remember := r.FormValue("remember") == "1"
+
+	validationErrs := make(map[string]string)
+	err := validation.Validator.Var(username, "required,min=3,max=50,username")
+	if err != nil {
+		validationErrs["username"] = "This username should required and valid"
+	}
+	err = validation.Validator.Var(password, "required")
+	if err != nil {
+		validationErrs["password"] = "Password is required"
+	}
+	if len(validationErrs) > 0 {
+		return &exceptions.ValidationError{
+			Message: "Data is invalid",
+			Errors: validationErrs,
+		}
+	}
 
 	user, err := controller.authService.Authenticate(r.Context(), username, password)
 	if err != nil {
@@ -51,7 +70,12 @@ func (controller *AuthController) Login(w http.ResponseWriter, r *http.Request) 
 	}
 	
 	if user != nil {
-		authToken, err := controller.authService.GenerateAuthToken(user.Id)
+		var hours = 2;
+		if remember {
+			hours = 24 * 30
+		}
+		var exp = time.Now().Add(time.Duration(hours) * time.Hour).Unix()
+		authToken, err := controller.authService.GenerateAuthToken(user.Id, exp)
 		if err != nil {
 			return err
 		}
@@ -59,6 +83,10 @@ func (controller *AuthController) Login(w http.ResponseWriter, r *http.Request) 
 		var cookieName = os.Getenv("COOKIE_NAME")
 		if cookieName == "" {
 			cookieName = "auth_token"
+		}
+		var maxAge = 7200;
+		if remember {
+			maxAge = 3600 * 24 * 30
 		}
 
 		cookie := http.Cookie{
@@ -68,7 +96,7 @@ func (controller *AuthController) Login(w http.ResponseWriter, r *http.Request) 
 			HttpOnly: true, // cannot be accessed by JS (secure)
 			Secure: false, // set to true in HTTPS
 			SameSite: http.SameSiteLaxMode,
-			MaxAge: 86400, // 1 day
+			MaxAge: maxAge,
 		}
 		http.SetCookie(w, &cookie)
 
