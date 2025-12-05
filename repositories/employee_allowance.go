@@ -6,6 +6,7 @@ import (
 
 	"github.com/anggadarkprince/crud-employee-go/database"
 	"github.com/anggadarkprince/crud-employee-go/models"
+	"gitlab.com/tozd/go/errors"
 )
 
 type EmployeeAllowanceRepository struct {
@@ -20,7 +21,7 @@ func (r *EmployeeAllowanceRepository) GetByEmployeeId(ctx context.Context, emplo
 	query := `SELECT id, employee_id, allowance FROM employee_allowances WHERE employee_id = ?`;
 	rows, err := r.db.QueryContext(ctx, query, employeeId)
 	if err != nil {
-		return nil, err
+		return nil, errors.Errorf("failed to query employee allowance by employee id=%d: %w", employeeId, err)
 	}
 	defer rows.Close()
 
@@ -34,7 +35,7 @@ func (r *EmployeeAllowanceRepository) GetByEmployeeId(ctx context.Context, emplo
 			&employeeAllowance.Allowance,
 		)
 		if err != nil {
-			return nil, err
+			return nil, errors.Errorf("allowance by employee not found id=%d: %w", employeeId, err)
 		}
 
 		employeeAllowances = append(employeeAllowances, employeeAllowance)
@@ -51,6 +52,9 @@ func (r *EmployeeAllowanceRepository) WithTx(tx *sql.Tx) *EmployeeAllowanceRepos
 func (repository *EmployeeAllowanceRepository) GetById(ctx context.Context, id int) (*models.EmployeeAllowance, error) {
 	query := `SELECT id, employee_id, allowance FROM employee_allowances WHERE id = ?`
 	row := repository.db.QueryRowContext(ctx, query, id)
+	if row.Err() != nil {
+		return nil, errors.Errorf("failed to query employee allowance id=%d: %w", id, row.Err())
+	}
 	var employeeAllowance models.EmployeeAllowance
 	err := row.Scan(
 		&employeeAllowance.Id,
@@ -58,7 +62,7 @@ func (repository *EmployeeAllowanceRepository) GetById(ctx context.Context, id i
 		&employeeAllowance.Allowance,
 	)
 	if err != nil {
-		return nil, err
+		return nil, errors.Errorf("employee allowance not found id=%d: %w", id, err)
 	}
 	return &employeeAllowance, nil
 }
@@ -67,11 +71,11 @@ func (repository *EmployeeAllowanceRepository) Store(ctx context.Context, employ
 	query := `INSERT INTO employee_allowances(employee_id, allowance) VALUES(?, ?)`
 	result, err := repository.db.ExecContext(ctx, query)
 	if err != nil {
-		return nil, err
+		return nil, errors.Errorf("failed to store employee allowance: %w", err)
 	}
 	id, err := result.LastInsertId()
 	if err != nil {
-		return nil, err
+		return nil, errors.Errorf("failed to get last id: %w", err)
 	}
 	employeeAllowance.Id = int(id)
 	return employeeAllowance, nil
@@ -81,7 +85,7 @@ func (repository *EmployeeAllowanceRepository) StoreMany(ctx context.Context, em
 	query := `INSERT INTO employee_allowances(employee_id, allowance) VALUES(?, ?)`
 	statement, err := repository.db.PrepareContext(ctx, query)
 	if err != nil {
-		return nil, err
+		return nil, errors.Errorf("failed to prepare statement: %w", err)
 	}
 	defer statement.Close()
 
@@ -89,11 +93,11 @@ func (repository *EmployeeAllowanceRepository) StoreMany(ctx context.Context, em
 	for _, item := range allowances {
 		result, err := statement.Exec(employeeId, item)
 		if err != nil {
-			return nil, err
+			return nil, errors.Errorf("failed to store employee allowance: %w", err)
 		}
 		id, err := result.LastInsertId()
 		if err != nil {
-			return nil, err
+			return nil, errors.Errorf("failed to get last id: %w", err)
 		}
 		employeeAllowances = append(employeeAllowances, models.EmployeeAllowance{
 			Id: int(id),
@@ -118,14 +122,21 @@ func (repository *EmployeeAllowanceRepository) Update(ctx context.Context, emplo
 		employeeAllowance.Id,
 	)
 	if err != nil {
-		return nil, err
+		return nil, errors.Errorf("failed to update allowance id=%d: %w", employeeAllowance.Id, err)
 	}
 	
 	return repository.GetById(ctx, employeeAllowance.Id)
 }
 
-func (repository *EmployeeAllowanceRepository) DestroyByEmployeeId(ctx context.Context, employeeId int) error {
+func (repository *EmployeeAllowanceRepository) DestroyByEmployeeId(ctx context.Context, employeeId int) (int64, error) {
 	query := `DELETE FROM employee_allowances WHERE employee_id = ?`
-	_, err := repository.db.ExecContext(ctx, query, employeeId)
-	return err
+	result, err := repository.db.ExecContext(ctx, query, employeeId)
+	if err != nil {
+		return 0, errors.Errorf("failed to delete allowance by employee id=%d: %w", employeeId, err)
+	}
+	rowAffected, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Errorf("failed to get rows affected: %w", err)
+	}
+	return rowAffected, nil
 }

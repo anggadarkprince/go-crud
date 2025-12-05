@@ -3,6 +3,8 @@ package repositories
 import (
 	"context"
 	"database/sql"
+
+	"gitlab.com/tozd/go/errors"
 )
 
 type DashboardStatistics struct {
@@ -36,7 +38,7 @@ func (repository *DashboardRepository) GetStatistics(ctx context.Context) (*Dash
 		Scan(&stats.Total, &stats.Active, &stats.Inactive, &stats.Pending)
 	
 	if err != nil {
-        return nil, err
+        return nil, errors.Errorf("failed to query dashboard statistic: %w", err)
     }
 
 	return &stats, nil

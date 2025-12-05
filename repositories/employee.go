@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 
+	"gitlab.com/tozd/go/errors"
+
 	"github.com/anggadarkprince/crud-employee-go/database"
 	"github.com/anggadarkprince/crud-employee-go/models"
 )
@@ -33,7 +35,7 @@ func (repository *EmployeeRepository) GetAll(ctx context.Context) (*[]models.Emp
 	rows, err := repository.db.QueryContext(ctx, query)
 	
 	if err != nil {
-        return nil, err
+        return nil, errors.Errorf("failed to query employees: %w", err)
     }
 	defer rows.Close()
 
@@ -53,7 +55,7 @@ func (repository *EmployeeRepository) GetAll(ctx context.Context) (*[]models.Emp
 			&employee.TotalAllowance,
 		)
 		if err != nil {
-			return nil, err
+			return nil, errors.Errorf("failed to get employee rows: %w", err)
 		}
 
 		employees = append(employees, employee)
@@ -69,7 +71,7 @@ func (repository *EmployeeRepository) GetById(ctx context.Context, employeeId in
 	`;
 	row := repository.db.QueryRowContext(ctx, query, employeeId)
 	if row.Err() != nil {
-		return nil, row.Err()
+		return nil, errors.Errorf("failed to query employee id=%d: %w", employeeId, row.Err())
 	}
 	var employee models.Employee
 	err := row.Scan(
@@ -83,7 +85,7 @@ func (repository *EmployeeRepository) GetById(ctx context.Context, employeeId in
 		&employee.Status,
 	)
 	if err != nil {
-		return nil, err
+		return nil, errors.Errorf("employee not found id=%d: %w", employeeId, err)
 	}
 
 	return &employee, nil
@@ -107,12 +109,12 @@ func (repository *EmployeeRepository) Store(ctx context.Context, employee *model
 	)
 
 	if err != nil {
-		return nil, err
+		return nil, errors.Errorf("failed to store employee: %w", err)
 	}
 
 	employeeId, err := result.LastInsertId()
 	if err != nil {
-		return nil, err
+		return nil, errors.Errorf("failed to get last id: %w", err)
 	}
 
 	return repository.GetById(ctx, int(employeeId))
@@ -138,14 +140,21 @@ func (repository *EmployeeRepository) Update(ctx context.Context, employee *mode
 	)
 
 	if err != nil {
-		return nil, err
+		return nil, errors.Errorf("failed to update employee id=%d: %w", employee.Id, err)
 	}
 
 	return repository.GetById(ctx, employee.Id)
 }
 
-func (repository *EmployeeRepository) Destroy(ctx context.Context, employeeId int) error {
+func (repository *EmployeeRepository) Destroy(ctx context.Context, employeeId int) (int64, error) {
 	query := `DELETE FROM employees WHERE id = ?`
-	_, err := repository.db.ExecContext(ctx, query, employeeId)
-	return err
+	result, err := repository.db.ExecContext(ctx, query, employeeId)
+	if err != nil {
+		return 0, errors.Errorf("failed to delete employee id=%d: %w", employeeId, err)
+	}
+	rowAffected, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Errorf("failed to get rows affected: %w", err)
+	}
+	return rowAffected, nil
 }

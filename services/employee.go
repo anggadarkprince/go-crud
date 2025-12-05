@@ -109,7 +109,7 @@ func (service *EmployeeService) Update(ctx context.Context, data *dto.UpdateEmpl
 	}
 	
 	employeeAllowanceRepository := service.employeeAllowanceRepository.WithTx(tx)
-	err = employeeAllowanceRepository.DestroyByEmployeeId(ctx, employee.Id)
+	_, err = employeeAllowanceRepository.DestroyByEmployeeId(ctx, employee.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -133,13 +133,12 @@ func (service *EmployeeService) Destroy(ctx context.Context, id int) error {
 	defer tx.Rollback()
 
 	employeeRepository := service.employeeRepository.WithTx(tx)
-	err = employeeRepository.Destroy(ctx, id)
+	_, err = employeeRepository.Destroy(ctx, id)
 	if err != nil {
 		return err
 	}
-	
 	employeeAllowanceRepository := service.employeeAllowanceRepository.WithTx(tx)
-	err = employeeAllowanceRepository.DestroyByEmployeeId(ctx, id)
+	_, err = employeeAllowanceRepository.DestroyByEmployeeId(ctx, id)
 	if err != nil {
 		return err
 	}

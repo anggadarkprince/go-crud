@@ -14,25 +14,25 @@ import (
 )
 
 type Employee struct {
-	Id int
-	Name string
-	Email sql.NullString
-	TaxNumber sql.NullString
-	Gender sql.NullString
-	HiredDate sql.NullTime
-	Address sql.NullString
-	Status sql.NullString
+	Id             int
+	Name           string
+	Email          sql.NullString
+	TaxNumber      sql.NullString
+	Gender         sql.NullString
+	HiredDate      sql.NullTime
+	Address        sql.NullString
+	Status         sql.NullString
 	TotalAllowance int
 }
 
 type EmployeeAllowance struct {
-	Id int
+	Id         int
 	EmployeeId int
-	Allowance string
+	Allowance  string
 }
 
 type EmployeeController struct {
-	employeeService *services.EmployeeService
+	employeeService          *services.EmployeeService
 	employeeAllowanceService *services.EmployeeAllowanceService
 }
 
@@ -41,7 +41,7 @@ func NewEmployeeController(
 	employeeAllowanceService *services.EmployeeAllowanceService,
 ) *EmployeeController {
 	return &EmployeeController{
-		employeeService: employeeService,
+		employeeService:          employeeService,
 		employeeAllowanceService: employeeAllowanceService,
 	}
 }
@@ -49,8 +49,8 @@ func NewEmployeeController(
 func (controller *EmployeeController) Index(w http.ResponseWriter, r *http.Request) error {
 	employees, err := controller.employeeService.GetAll(r.Context())
 	if err != nil {
-        return err
-    }
+		return err
+	}
 
 	data := utilities.Compact(
 		"employees", employees,
@@ -65,30 +65,30 @@ func (c *EmployeeController) Create(w http.ResponseWriter, r *http.Request) erro
 
 func (c *EmployeeController) Store(w http.ResponseWriter, r *http.Request) error {
 	if err := r.ParseForm(); err != nil {
-        return err
-    }
+		return err
+	}
 
 	allowances := r.Form["allowances"]
 	data := &dto.CreateEmployeeRequest{
-		Name: r.FormValue("name"),
-		Email: r.FormValue("email"),
-		TaxNumber: r.FormValue("tax_number"),
-		Gender: r.FormValue("gender"),
-		HiredDate: r.FormValue("hired_date"),
-		Address: r.FormValue("address"),
-		Status: r.FormValue("status"),
+		Name:       r.FormValue("name"),
+		Email:      r.FormValue("email"),
+		TaxNumber:  r.FormValue("tax_number"),
+		Gender:     r.FormValue("gender"),
+		HiredDate:  r.FormValue("hired_date"),
+		Address:    r.FormValue("address"),
+		Status:     r.FormValue("status"),
 		Allowances: allowances,
 	}
 	err := validation.Validator.Struct(data)
-    if err != nil {
+	if err != nil {
 		return err
 	}
 
 	employee, err := c.employeeService.Store(r.Context(), data)
 	if err != nil {
-        return err
-    }
-	
+		return err
+	}
+
 	session.Flash(w, "success", fmt.Sprintf("Employee %s successfully created", employee.Name))
 
 	http.Redirect(w, r, "/employees", http.StatusSeeOther)
@@ -99,17 +99,17 @@ func (c *EmployeeController) View(w http.ResponseWriter, r *http.Request) error 
 	id := r.PathValue("id")
 	employeeId, err := strconv.ParseInt(id, 10, 0)
 	if err != nil {
-        return err
-    }
+		return err
+	}
 	employee, err := c.employeeService.GetById(r.Context(), int(employeeId))
 	if err != nil {
-        return err
-    }
+		return err
+	}
 	employeeAllowances, err := c.employeeAllowanceService.GetByEmployeeId(r.Context(), int(employeeId))
 	if err != nil {
-        return err
-    }
-	
+		return err
+	}
+
 	data := utilities.Compact(
 		"employee", employee,
 		"employeeAllowances", employeeAllowances,
@@ -121,17 +121,17 @@ func (c *EmployeeController) Edit(w http.ResponseWriter, r *http.Request) error 
 	id := r.PathValue("id")
 	employeeId, err := strconv.ParseInt(id, 10, 0)
 	if err != nil {
-        return err
-    }
+		return err
+	}
 	employee, err := c.employeeService.GetById(r.Context(), int(employeeId))
 	if err != nil {
-        return err
-    }
+		return err
+	}
 	employeeAllowances, err := c.employeeAllowanceService.GetByEmployeeId(r.Context(), int(employeeId))
 	if err != nil {
-        return err
-    }
-	
+		return err
+	}
+
 	data := utilities.Compact(
 		"employee", employee,
 		"employeeAllowances", employeeAllowances,
@@ -143,55 +143,56 @@ func (c *EmployeeController) Update(w http.ResponseWriter, r *http.Request) erro
 	id := r.PathValue("id")
 	employeeId, err := strconv.ParseInt(id, 10, 0)
 	if err != nil {
-        return err
-    }
+		return err
+	}
 
 	if err := r.ParseForm(); err != nil {
-        return err
-    }
+		return err
+	}
 
 	allowances := r.Form["allowances"]
 	data := &dto.UpdateEmployeeRequest{
-		Id: int(employeeId),
-		Name: r.FormValue("name"),
-		Email: r.FormValue("email"),
-		TaxNumber: r.FormValue("tax_number"),
-		Gender: r.FormValue("gender"),
-		HiredDate: r.FormValue("hired_date"),
-		Address: r.FormValue("address"),
-		Status: r.FormValue("status"),
+		Id:         int(employeeId),
+		Name:       r.FormValue("name"),
+		Email:      r.FormValue("email"),
+		TaxNumber:  r.FormValue("tax_number"),
+		Gender:     r.FormValue("gender"),
+		HiredDate:  r.FormValue("hired_date"),
+		Address:    r.FormValue("address"),
+		Status:     r.FormValue("status"),
 		Allowances: allowances,
 	}
 	err = validation.Validator.Struct(data)
-    if err != nil {
+	if err != nil {
 		return err
 	}
 
 	employee, err := c.employeeService.Update(r.Context(), data)
 	if err != nil {
-        return err
-    }
-	
+		return err
+	}
+
 	session.Flash(w, "success", fmt.Sprintf("Employee %s successfully updated", employee.Name))
-	
+
 	http.Redirect(w, r, "/employees", http.StatusSeeOther)
 	return nil
 }
 
 func (c *EmployeeController) Delete(w http.ResponseWriter, r *http.Request) error {
 	id := r.PathValue("id")
+
 	employeeId, err := strconv.ParseInt(id, 10, 0)
 	if err != nil {
-        return err
-    }
+		return err
+	}
 	employee, err := c.employeeService.GetById(r.Context(), int(employeeId))
 	if err != nil {
-        return err
-    }
+		return err
+	}
 	err = c.employeeService.Destroy(r.Context(), int(employeeId))
 	if err != nil {
-        return err
-    }
+		return err
+	}
 	session.Flash(w, "warning", fmt.Sprintf("Employee %s successfully deleted", employee.Name))
 	http.Redirect(w, r, "/employees", http.StatusSeeOther)
 	return nil

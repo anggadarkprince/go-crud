@@ -3,7 +3,6 @@ package routes
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -11,6 +10,7 @@ import (
 	"github.com/anggadarkprince/crud-employee-go/controllers"
 	"github.com/anggadarkprince/crud-employee-go/exceptions"
 	"github.com/anggadarkprince/crud-employee-go/middlewares"
+	"github.com/anggadarkprince/crud-employee-go/pkg/logger"
 	"github.com/anggadarkprince/crud-employee-go/repositories"
 	"github.com/anggadarkprince/crud-employee-go/services"
 	"github.com/anggadarkprince/crud-employee-go/utilities/session"
@@ -30,13 +30,11 @@ func (h HandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			validationErrors := validation.FormatValidationErrors(validationErrors)
 			errorMessage = "Please check the data you provided."
 			errorData = validationErrors
-		} else {
-			fmt.Println("Error", err.Error())
-		}
-
-		if validationErrors, ok := err.(*exceptions.ValidationError); ok {
+		} else if validationErrors, ok := err.(*exceptions.ValidationError); ok {
 			errorMessage = validationErrors.Message
 			errorData = validationErrors.Errors
+		} else {
+			logger.LogError("Uncaught exception", err, r)
 		}
 		
 		referer := r.Header.Get("referer")
@@ -50,7 +48,11 @@ func (h HandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				errorMessage = appErr.Message
 			}
 			if errorMessage == "" {
-				errorMessage = err.Error()
+				if configs.Get().App.Environment == "production" {
+					errorMessage = "Something went wrong"
+				} else {
+					errorMessage = err.Error()
+				}
 			}
 			
 			flashData := session.FlashData{

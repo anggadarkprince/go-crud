@@ -6,6 +6,7 @@ import (
 
 	"github.com/anggadarkprince/crud-employee-go/database"
 	"github.com/anggadarkprince/crud-employee-go/models"
+	"gitlab.com/tozd/go/errors"
 )
 
 type UserRepository struct {
@@ -31,7 +32,7 @@ func (repository *UserRepository) GetAll(ctx context.Context) (*[]models.User, e
 	rows, err := repository.db.QueryContext(ctx, query)
 	
 	if err != nil {
-        return nil, err
+        return nil, errors.Errorf("failed to query users: %w", err)
     }
 	defer rows.Close()
 
@@ -50,7 +51,7 @@ func (repository *UserRepository) GetAll(ctx context.Context) (*[]models.User, e
 			&user.Avatar,
 		)
 		if err != nil {
-			return nil, err
+			return nil, errors.Errorf("failed to get user rows: %w", err)
 		}
 
 		users = append(users, user)
@@ -61,7 +62,7 @@ func (repository *UserRepository) GetAll(ctx context.Context) (*[]models.User, e
 
 func (repository *UserRepository) mapResultToUser(row *sql.Row) (*models.User, error) {
 	if row.Err() != nil {
-		return nil, row.Err()
+		return nil, errors.Errorf("failed to query user: %w", row.Err())
 	}
 
 	var user models.User
@@ -76,7 +77,7 @@ func (repository *UserRepository) mapResultToUser(row *sql.Row) (*models.User, e
 		&user.Avatar,
 	)
 	if err != nil {
-		return nil, err
+		return nil, errors.Errorf("user not found: %w", err)
 	}
 
 	return &user, nil
@@ -130,7 +131,7 @@ func (repository *UserRepository) Create(ctx context.Context, user *models.User)
 	)
 
 	if err != nil {
-		return nil, err
+		return nil, errors.Errorf("failed to store user: %w", err)
 	}
 
 	employeeId, err := result.LastInsertId()
