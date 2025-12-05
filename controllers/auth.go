@@ -10,8 +10,8 @@ import (
 	"github.com/anggadarkprince/crud-employee-go/exceptions"
 	"github.com/anggadarkprince/crud-employee-go/services"
 	"github.com/anggadarkprince/crud-employee-go/utilities"
-	"github.com/anggadarkprince/crud-employee-go/utilities/session"
-	"github.com/anggadarkprince/crud-employee-go/utilities/validation"
+	"github.com/anggadarkprince/crud-employee-go/pkg/session"
+	"github.com/anggadarkprince/crud-employee-go/pkg/validation"
 )
 
 type AuthController struct {

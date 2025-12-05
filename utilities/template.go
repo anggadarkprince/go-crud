@@ -14,7 +14,7 @@ import (
 	"text/template"
 
 	"github.com/anggadarkprince/crud-employee-go/middlewares"
-	"github.com/anggadarkprince/crud-employee-go/utilities/session"
+	"github.com/anggadarkprince/crud-employee-go/pkg/session"
 )
 
 var Template *template.Template

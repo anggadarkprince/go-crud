@@ -11,10 +11,10 @@ import (
 	"github.com/anggadarkprince/crud-employee-go/exceptions"
 	"github.com/anggadarkprince/crud-employee-go/middlewares"
 	"github.com/anggadarkprince/crud-employee-go/pkg/logger"
+	"github.com/anggadarkprince/crud-employee-go/pkg/session"
+	"github.com/anggadarkprince/crud-employee-go/pkg/validation"
 	"github.com/anggadarkprince/crud-employee-go/repositories"
 	"github.com/anggadarkprince/crud-employee-go/services"
-	"github.com/anggadarkprince/crud-employee-go/utilities/session"
-	"github.com/anggadarkprince/crud-employee-go/utilities/validation"
 	"github.com/go-playground/validator/v10"
 )
 
