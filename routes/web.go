@@ -80,16 +80,16 @@ func MapRoutes(server *http.ServeMux, db *sql.DB) {
 		SecretKey: configs.Get().Auth.JwtSecret,
 	}
 
-	server.Handle("/login", auth.GuestMiddleware(HandlerFunc(authController.Login)))
-	server.Handle("/authenticate", auth.GuestMiddleware(HandlerFunc(authController.Authenticate)))
-	server.Handle("/register", auth.GuestMiddleware(HandlerFunc(authController.Register)))
-	server.Handle("/register-user", auth.GuestMiddleware(HandlerFunc(authController.RegisterUser)))
-	server.Handle("/logout", auth.AuthMiddleware(HandlerFunc(authController.Logout)))
+	server.Handle("GET /login", auth.GuestMiddleware(HandlerFunc(authController.Login)))
+	server.Handle("POST /login", auth.GuestMiddleware(HandlerFunc(authController.Authenticate)))
+	server.Handle("GET /register", auth.GuestMiddleware(HandlerFunc(authController.Register)))
+	server.Handle("POST /register", auth.GuestMiddleware(HandlerFunc(authController.RegisterUser)))
+	server.Handle("GET /logout", auth.AuthMiddleware(HandlerFunc(authController.Logout)))
 
 	dashboardRepository := repositories.NewDashboardRepository(db)
 	dashboardService := services.NewDashboardService(dashboardRepository)
 	dashboardController := controllers.NewDashboardController(dashboardService)
-	server.Handle("/", auth.AuthMiddleware(HandlerFunc(dashboardController.Index)))
+	server.Handle("GET /", auth.AuthMiddleware(HandlerFunc(dashboardController.Index)))
 
 	employeeRepository := repositories.NewEmployeeRepository(db)
 	employeeAllowanceRepository := repositories.NewEmployeeAllowanceRepository(db)
@@ -102,11 +102,11 @@ func MapRoutes(server *http.ServeMux, db *sql.DB) {
 		employeeAllowanceRepository,
 	)
 	employeeController := controllers.NewEmployeeController(employeeService, employeeAllowanceService)
-	server.Handle("/employees", auth.AuthMiddleware(HandlerFunc(employeeController.Index)))
-	server.Handle("/employees/create", auth.AuthMiddleware(HandlerFunc(employeeController.Create)))
-	server.Handle("/employees/store", auth.AuthMiddleware(HandlerFunc(employeeController.Store)))
-	server.Handle("/employees/{id}", auth.AuthMiddleware(HandlerFunc(employeeController.View)))
-	server.Handle("/employees/{id}/edit", auth.AuthMiddleware(HandlerFunc(employeeController.Edit)))
-	server.Handle("/employees/{id}/update", auth.AuthMiddleware(HandlerFunc(employeeController.Update)))
-	server.Handle("/employees/{id}/delete", auth.AuthMiddleware(HandlerFunc(employeeController.Delete)))
+	server.Handle("GET /employees", auth.AuthMiddleware(HandlerFunc(employeeController.Index)))
+	server.Handle("GET /employees/create", auth.AuthMiddleware(HandlerFunc(employeeController.Create)))
+	server.Handle("POST /employees", auth.AuthMiddleware(HandlerFunc(employeeController.Store)))
+	server.Handle("GET /employees/{id}", auth.AuthMiddleware(HandlerFunc(employeeController.View)))
+	server.Handle("GET /employees/{id}/edit", auth.AuthMiddleware(HandlerFunc(employeeController.Edit)))
+	server.Handle("PUT /employees/{id}", auth.AuthMiddleware(HandlerFunc(employeeController.Update)))
+	server.Handle("DELETE /employees/{id}", auth.AuthMiddleware(HandlerFunc(employeeController.Delete)))
 }
