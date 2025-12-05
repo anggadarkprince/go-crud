@@ -2,6 +2,8 @@ package validation
 
 import (
 	"fmt"
+	"mime/multipart"
+	"path/filepath"
 	"reflect"
 	"regexp"
 	"strings"
@@ -50,6 +52,24 @@ func Init() {
 		pattern := `^[A-Za-z0-9._-]+$`
 		matched, _ := regexp.MatchString(pattern, username)
 		return matched
+	})
+	
+	Validator.RegisterValidation("avatar", func(fl validator.FieldLevel) bool {
+		fileHeader, ok := fl.Field().Interface().(*multipart.FileHeader)
+		if !ok || fileHeader == nil {
+			return true // optional file → valid
+		}
+
+		// 1. Check size (e.g. max 2MB)
+		if fileHeader.Size > 2<<20 {
+			return false
+		}
+
+		// 2. Check extension (optional)
+		ext := strings.ToLower(filepath.Ext(fileHeader.Filename))
+		allowed := map[string]bool{".jpg": true, ".jpeg": true, ".png": true}
+		
+		return allowed[ext]
 	})
 }
 

@@ -131,6 +131,9 @@ func MapRoutes(server *http.ServeMux, db *sql.DB) {
 	)
 	employeeController := controllers.NewEmployeeController(employeeService, employeeAllowanceService)
 
+	userService := services.NewUserService(userRepository, db)
+	accountController := controllers.NewAccountController(userService)
+
 	// Auth-protected routes
     registerRoutes(server, authGroup(auth, map[string]http.Handler{
         "GET /employees": HandlerFunc(employeeController.Index),
@@ -140,5 +143,8 @@ func MapRoutes(server *http.ServeMux, db *sql.DB) {
         "GET /employees/{id}/edit": HandlerFunc(employeeController.Edit),
         "PUT /employees/{id}": HandlerFunc(employeeController.Update),
         "DELETE /employees/{id}": HandlerFunc(employeeController.Delete),
+
+		"GET /account": HandlerFunc(accountController.Index),
+		"PUT /account": HandlerFunc(accountController.Update),
     }))
 }

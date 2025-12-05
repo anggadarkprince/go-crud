@@ -134,10 +134,33 @@ func (repository *UserRepository) Create(ctx context.Context, user *models.User)
 		return nil, errors.Errorf("failed to store user: %w", err)
 	}
 
-	employeeId, err := result.LastInsertId()
+	userId, err := result.LastInsertId()
 	if err != nil {
-		return nil, err
+		return nil, errors.Errorf("failed to get last insert id: %w", err)
 	}
 
-	return repository.GetById(ctx, int(employeeId))
+	return repository.GetById(ctx, int(userId))
+}
+
+func (repository *UserRepository) UpdateAccount(ctx context.Context, user *models.User) (*models.User, error) {
+	query := `
+		UPDATE users SET name = ?, username = ?, email = ?, password = ?, avatar = ?
+		WHERE id = ?
+	`
+	_, err := repository.db.ExecContext(
+		ctx,
+		query,
+		user.Name,
+		user.Username,
+		user.Email,
+		user.Password,
+		user.Avatar,
+		user.Id,
+	)
+
+	if err != nil {
+		return nil, errors.Errorf("failed to update account: %w", err)
+	}
+
+	return repository.GetById(ctx, int(user.Id))
 }

@@ -29,8 +29,14 @@ func main() {
 	
 	server := http.NewServeMux()
 
+	fs := http.FileServer(http.Dir("./uploads"))
+    server.Handle("/statics/", http.StripPrefix("/statics/", fs))
+	
 	server.HandleFunc("GET /favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "public/favicon.ico")
+	})
+	server.HandleFunc("GET /statics/img/no-avatar.png", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "public/img/no-avatar.png")
 	})
 	routes.MapRoutes(server, db)
 
