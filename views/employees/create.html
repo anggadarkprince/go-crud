@@ -7,7 +7,7 @@
     <h4 class="mb-0 fw-semibold">Create Employee</h4>
 </div>
 
-<form action="/employees/store" method="post">
+<form action="/employees" method="post">
     <div class="mb-3">
         <label for="name" class="form-label">Name</label>
         <input type="text" class="form-control {{ if has .errors "name" }} is-invalid {{ end }}" id="name" name="name" placeholder="Full name" value="{{ default .old.name "" }}">

@@ -7,7 +7,8 @@
     <h4 class="mb-0 fw-semibold">Edit Employee</h4>
 </div>
 
-<form action="/employees/{{ .employee.Id }}/update" method="post">
+<form action="/employees/{{ .employee.Id }}" method="post">
+    <input type="hidden" name="_method" value="PUT">
     <div class="mb-3">
         <label for="name" class="form-label">Name</label>
         <input type="text" class="form-control {{ if has .errors "name" }} is-invalid {{ end }}" id="name" name="name" placeholder="Full name" value="{{ default .old.name .employee.Name }}">

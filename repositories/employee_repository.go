@@ -121,7 +121,7 @@ func (repository *EmployeeRepository) Store(ctx context.Context, employee *model
 func (repository *EmployeeRepository) Update(ctx context.Context, employee *models.Employee) (*models.Employee, error) {
 	query := `
 		UPDATE employees 
-		SET name = ?, emails = ?, tax_number = ?, gender = ?, hired_date = ?, address = ?, status = ? 
+		SET name = ?, email = ?, tax_number = ?, gender = ?, hired_date = ?, address = ?, status = ? 
 		WHERE id = ?
 	`
 	_, err := repository.db.ExecContext(

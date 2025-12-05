@@ -71,9 +71,11 @@
                             </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
-                                <a class="dropdown-item" href="/employees/{{ $employee.Id }}/delete">
+                                <button type="button" class="dropdown-item btn-delete"
+                                    data-url="/employees/{{ $employee.Id }}"
+                                    data-label="{{ $employee.Name }}">
                                     <i class="mdi mdi-trash-can-outline me-2"></i> Delete
-                                </a>
+                                </button>
                             </li>
                         </ul>
                     </div>
@@ -82,4 +84,29 @@
         {{ end }}
     </tbody>
 </table>
+
+{{ template "modal_delete" . }}
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    let deleteModal = new bootstrap.Modal(document.getElementById('modal-delete'));
+    let deleteForm = document.getElementById('delete-from');
+    let deleteLabel = document.querySelector('.delete-label');
+console.log('d')
+    document.querySelectorAll('.btn-delete').forEach(button => {
+        button.addEventListener('click', function () {
+console.log('a')
+            let url = this.dataset.url;
+            let label = this.dataset.label;
+
+            deleteForm.action = url;
+            deleteLabel.textContent = label;
+
+            deleteModal.show();
+        });
+    });
+
+});
+</script>
+
 {{ end }}
