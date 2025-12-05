@@ -72,6 +72,28 @@ func (h HandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     }
 }
 
+func authGroup(auth *middlewares.Auth, routes map[string]http.Handler) map[string]http.Handler {
+    grouped := make(map[string]http.Handler)
+    for pattern, handler := range routes {
+        grouped[pattern] = auth.AuthMiddleware(handler)
+    }
+    return grouped
+}
+
+func guestGroup(auth *middlewares.Auth, routes map[string]http.Handler) map[string]http.Handler {
+    grouped := make(map[string]http.Handler)
+    for pattern, handler := range routes {
+        grouped[pattern] = auth.GuestMiddleware(handler)
+    }
+    return grouped
+}
+
+func registerRoutes(mux *http.ServeMux, routes map[string]http.Handler) {
+    for pattern, handler := range routes {
+        mux.Handle(pattern, handler)
+    }
+}
+
 func MapRoutes(server *http.ServeMux, db *sql.DB) {
 	userRepository := repositories.NewUserRepository(db)
 	authService := services.NewAuthService(userRepository)
@@ -82,16 +104,20 @@ func MapRoutes(server *http.ServeMux, db *sql.DB) {
 		SecretKey: configs.Get().Auth.JwtSecret,
 	}
 
-	server.Handle("GET /login", auth.GuestMiddleware(HandlerFunc(authController.Login)))
-	server.Handle("POST /login", auth.GuestMiddleware(HandlerFunc(authController.Authenticate)))
-	server.Handle("GET /register", auth.GuestMiddleware(HandlerFunc(authController.Register)))
-	server.Handle("POST /register", auth.GuestMiddleware(HandlerFunc(authController.RegisterUser)))
+	// Guest routes
+	registerRoutes(server, guestGroup(auth, map[string]http.Handler{
+		"GET /login": HandlerFunc(authController.Login),
+        "POST /login": HandlerFunc(authController.Authenticate),
+        "GET /register": HandlerFunc(authController.Register),
+        "POST /register": HandlerFunc(authController.RegisterUser),
+	}))
 	server.Handle("GET /logout", auth.AuthMiddleware(HandlerFunc(authController.Logout)))
 
 	dashboardRepository := repositories.NewDashboardRepository(db)
 	dashboardService := services.NewDashboardService(dashboardRepository)
 	dashboardController := controllers.NewDashboardController(dashboardService)
-	server.Handle("GET /", auth.AuthMiddleware(HandlerFunc(dashboardController.Index)))
+	server.Handle("GET /{$}", auth.AuthMiddleware(HandlerFunc(dashboardController.Index)))
+	server.Handle("GET /dashboard", auth.AuthMiddleware(HandlerFunc(dashboardController.Index)))
 
 	employeeRepository := repositories.NewEmployeeRepository(db)
 	employeeAllowanceRepository := repositories.NewEmployeeAllowanceRepository(db)
@@ -104,11 +130,15 @@ func MapRoutes(server *http.ServeMux, db *sql.DB) {
 		employeeAllowanceRepository,
 	)
 	employeeController := controllers.NewEmployeeController(employeeService, employeeAllowanceService)
-	server.Handle("GET /employees", auth.AuthMiddleware(HandlerFunc(employeeController.Index)))
-	server.Handle("GET /employees/create", auth.AuthMiddleware(HandlerFunc(employeeController.Create)))
-	server.Handle("POST /employees", auth.AuthMiddleware(HandlerFunc(employeeController.Store)))
-	server.Handle("GET /employees/{id}", auth.AuthMiddleware(HandlerFunc(employeeController.View)))
-	server.Handle("GET /employees/{id}/edit", auth.AuthMiddleware(HandlerFunc(employeeController.Edit)))
-	server.Handle("PUT /employees/{id}", auth.AuthMiddleware(HandlerFunc(employeeController.Update)))
-	server.Handle("DELETE /employees/{id}", auth.AuthMiddleware(HandlerFunc(employeeController.Delete)))
+
+	// Auth-protected routes
+    registerRoutes(server, authGroup(auth, map[string]http.Handler{
+        "GET /employees": HandlerFunc(employeeController.Index),
+        "GET /employees/create": HandlerFunc(employeeController.Create),
+        "POST /employees": HandlerFunc(employeeController.Store),
+        "GET /employees/{id}": HandlerFunc(employeeController.View),
+        "GET /employees/{id}/edit": HandlerFunc(employeeController.Edit),
+        "PUT /employees/{id}": HandlerFunc(employeeController.Update),
+        "DELETE /employees/{id}": HandlerFunc(employeeController.Delete),
+    }))
 }
