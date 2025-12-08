@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -51,7 +52,7 @@ func (service *UserService) UpdateAccount(ctx context.Context, data *dto.UpdateA
 		year := time.Now().Format("2006")
 		month := time.Now().Format("01")
 
-		uploadPath := filepath.Join("avatars", year, month, data.AvatarFile.Filename)
+		uploadPath := fmt.Sprintf("avatars/%s/%s/%s", year, month, data.AvatarFile.Filename)
 		uploadDir := filepath.Join("uploads", "avatars", year, month)
 		err := os.MkdirAll(uploadDir, os.ModePerm)
 		if err != nil {
